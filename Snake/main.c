@@ -6,7 +6,7 @@ const int HEIGHT = 600;
 const int TAM_COBRA = 10;
 int VEL = 5;
 int num_segmentos = 16;
-int novo_movimento=1;
+int novo_movimento=0;
 
 enum direcoes{CIMA, BAIXO, ESQUERDA, DIREITA};
 
