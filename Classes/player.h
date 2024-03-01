@@ -48,6 +48,16 @@ class Player{
         void colisao_cobra(std::deque<SDL_Rect>& cobra_generica);
         void desenhar_cobra(SDL_Renderer** renderer);
         void atualizar_posicoes();
+        void drift_cobra(int direcao);
+};
+
+class Sombra: public Player{
+    public:
+        int num_players;
+        std::vector<bool> existe;
+
+    public:
+        void executar_controles_sombra(int tecla);
 };
 
 class Maca{
@@ -65,5 +75,5 @@ class Maca{
         Maca(int w, int h, int tamanho_cobra, int num_max_macas=20, int minimo=1);
         void sortear_macas(bool primeiro_sorteio);
         void colisao_macas(Player& p);
-        void desenhar_macas(SDL_Renderer** renderer, trio rgb);
+        void desenhar_macas(SDL_Renderer** renderer, trio rgb={255, 0, 0});
 };

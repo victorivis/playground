@@ -5,8 +5,16 @@ Player::Player(int w, int h, std::vector<int> z, trio cor_padrao){
     HEIGHT = h;
     controles=z;
     cor_cobra = cor_padrao;
-    cabeca.x = rand()%WIDTH;
-    cabeca.y = rand()%HEIGHT;
+    cabeca.x = rand()%(WIDTH/TAM_COBRA)*TAM_COBRA;
+    cabeca.y = rand()%(HEIGHT/TAM_COBRA)*TAM_COBRA;
+    switch(controles.size()){
+        case 4: controles.push_back('1');
+        case 5: controles.push_back('2');
+        case 6: controles.push_back('3');
+        case 7: controles.push_back('4');
+        case 8: controles.push_back('c');
+        case 9: controles.push_back(SDLK_PAUSE);
+    }
 }
 
 void Player::executar_controles(int tecla){
@@ -14,7 +22,12 @@ void Player::executar_controles(int tecla){
 	else if(tecla == controles[1]){ if(num_segmentos==1 || direcao!=Cima) direcao=Baixo;}
 	else if(tecla == controles[2]){ if(num_segmentos==1 || direcao!=Esquerda) direcao=Direita;}
 	else if(tecla == controles[3]){ if(num_segmentos==1 || direcao!=Direita) direcao=Esquerda;}
-    else if(tecla == 'c'){printf("%d", cobra_colorida); cobra_colorida = !cobra_colorida; cobra_colorida ? colorir_cobra() : descolorir_cobra();}
+    else if(tecla == controles[4]){drift_cobra(Cima);}
+    else if(tecla == controles[5]){drift_cobra(Baixo);}
+    else if(tecla == controles[6]){drift_cobra(Direita);}
+    else if(tecla == controles[7]){drift_cobra(Esquerda);}
+    else if(tecla == controles[8]){cobra_colorida = !cobra_colorida; cobra_colorida ? colorir_cobra() : descolorir_cobra();}
+    else if(tecla == controles[9]){direcao = -1;}
 }
 
 void Player::mover_cobra(int direcao){
@@ -79,9 +92,31 @@ void Player::atualizar_posicoes(){
 	}
 }
 
+void Player::drift_cobra(int direcao){
+    int x=0, y=0;
+    switch(direcao){
+        case Cima: y-=TAM_COBRA; break;
+        case Baixo: y+=TAM_COBRA; break;
+        case Direita: x+=TAM_COBRA; break;
+        case Esquerda: x-=TAM_COBRA; break; 
+    }
+    if(x!=0){
+        cabeca.x = (cabeca.x+x+WIDTH)%WIDTH;
+        for(int i=0; i<segmentos_cobra.size(); i++){
+            segmentos_cobra[i].x = (segmentos_cobra[i].x+x+WIDTH)%WIDTH;
+        }
+    }
+    else{
+        cabeca.y = (cabeca.y+y+HEIGHT)%HEIGHT;
+        for(int i=0; i<segmentos_cobra.size(); i++){
+            segmentos_cobra[i].y = (segmentos_cobra[i].y+y+HEIGHT)%HEIGHT;
+        }
+    }
+}
+
 Maca::Maca(int w, int h, int tamanho_cobra, int num_max_macas, int minimo){
     WIDTH = w;
-    HEIGHT = w;
+    HEIGHT = h;
 
     TAM_COBRA=tamanho_cobra;
     max_maca=num_max_macas;
@@ -121,7 +156,7 @@ void Maca::colisao_macas(Player& p){
 	});
 }
 
-void Maca::desenhar_macas(SDL_Renderer** renderer, trio rgb={255, 0, 0}){
+void Maca::desenhar_macas(SDL_Renderer** renderer, trio rgb){
     SDL_SetRenderDrawColor(*renderer, rgb.r, rgb.g, rgb.b, 255);
     for_each(macas.begin(), macas.end(), [&](auto& rect_maca){
 		SDL_RenderFillRect(*renderer, &rect_maca);
