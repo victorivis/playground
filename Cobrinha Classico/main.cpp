@@ -3,6 +3,7 @@
 #include <deque>
 #include <algorithm>
 #include <cstdlib>
+#include <cstdio>
 #include <iostream>
 
 using namespace std;
@@ -45,13 +46,14 @@ void colorir_cobra(vector<trio>& cores){
 	});
 }
 
-void descolorir_cobra(vector<trio>& cores){
-	for_each(cores.begin(), cores.end(), [&](trio& cor){
-		cor.r = 0;
-		cor.g = 0;
-		cor.b = 0;
-	});
-}
+void descolorir_cobra(vector<trio>& cores, trio cor_segmentos={0, 0, 0}){
+            for_each(cores.begin(), cores.end(), [&](trio& cor){
+                cor.r = cor_segmentos.r;
+                cor.g = cor_segmentos.g;
+                cor.b = cor_segmentos.b;
+            });
+        }
+
 
 int main(int argc, char* argv[]) {
 	//Criar Janela
@@ -82,9 +84,11 @@ int main(int argc, char* argv[]) {
 	//Jogo propriamente dito
 	while(rodar){
 		while(SDL_PollEvent(&evento)){
+			sair_pausa:
 			if(evento.type == SDL_QUIT) rodar=0;
 
 			else if(evento.type == SDL_KEYDOWN){
+				printf("%d\n", evento.key.keysym.sym);
 				switch(evento.key.keysym.sym){
 					case SDLK_ESCAPE:
 						rodar=0;
@@ -110,6 +114,7 @@ int main(int argc, char* argv[]) {
 					case 'p': do{
 						SDL_PollEvent(&evento);
 						} while(evento.type!=SDL_KEYDOWN);
+						goto sair_pausa;
 						break;
 				}
 			}
@@ -140,7 +145,7 @@ int main(int argc, char* argv[]) {
 		for_each(segmentos_cobra.begin(), segmentos_cobra.end(), [&](auto& segmento){
 			if(SDL_HasIntersection(&segmento, &cabeca)){
 				num_segmentos = 1;
-				cout << "Colisao cabeca\n";
+				//cout << "Colisao cabeca\n";
 			}
 		});
 
