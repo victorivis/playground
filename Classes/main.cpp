@@ -14,26 +14,18 @@ const int WIDTH = 1080, HEIGHT = 600;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
-short frequencia_maca=20;
-short total_macas=frequencia_maca;
 short minimo_sorteio=1;
 int TAM_COBRA = 10;
 
-void sortear_macas(vector<SDL_Rect>& macas, bool primeiro_sorteio=false){
-	for_each(macas.begin(), macas.end(), [&](auto& rect_maca){
-		if(rect_maca.x < 0 || primeiro_sorteio){
-			rect_maca.x = rand()%(WIDTH/TAM_COBRA)*TAM_COBRA;
-			rect_maca.y = rand()%(HEIGHT/TAM_COBRA)*TAM_COBRA;
-			if(primeiro_sorteio){
-				rect_maca.w = TAM_COBRA;
-				rect_maca.h = TAM_COBRA;
-			}
-		}
-	});
-}
-
 int main(int argc, char* argv[]) {
-	Player p1{WIDTH, HEIGHT, {SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT}};
+	//Variaveis de controle e configuracao
+	Player p1{WIDTH, HEIGHT, {SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT}, {255, 255, 255}};
+	Player p2{WIDTH, HEIGHT, {'w', 's', 'd', 'a'}, {0, 0, 0}};
+
+	Maca myApple{WIDTH, HEIGHT, 10, 20, 0};
+	myApple.sortear_macas(true);
+	SDL_Event evento;
+	int rodar=1;
 
 	//Criar Janela
 	SDL_Init(SDL_INIT_VIDEO);
@@ -41,13 +33,6 @@ int main(int argc, char* argv[]) {
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 							  WIDTH, HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, -1, 0);
-
-	//Variaveis de controle e configuracao
-	vector<SDL_Rect> macas(frequencia_maca);
-	sortear_macas(macas, true);
-
-	SDL_Event evento;
-	int rodar=1;
 
 	//Jogo propriamente dito
 	while(rodar){
@@ -68,45 +53,39 @@ int main(int argc, char* argv[]) {
 						break;
 					default:
 						p1.executar_controles(evento.key.keysym.sym);
+						p2.executar_controles(evento.key.keysym.sym);
 				}
 			}
 		}
 		//Mover cabeca
 		p1.mover_cobra(p1.direcao);
+		p2.mover_cobra(p2.direcao);
 
 		//Colisao macas
-		for_each(macas.begin(), macas.end(), [&](auto& rect_maca){
-			if(SDL_HasIntersection(&rect_maca, &p1.cabeca)){
-				p1.num_segmentos+=10;
-				total_macas--;
-				rect_maca.x = -10;
-				rect_maca.y = -10;
-			}
-		});
-
-		if(frequencia_maca-total_macas >= minimo_sorteio){
-			sortear_macas(macas);
-			total_macas = frequencia_maca;
-		}
+		myApple.colisao_macas(p1);
+		myApple.colisao_macas(p2);
 
 		//Colisao minhoca
 		p1.colisao_cobra(p1.segmentos_cobra);
+		p1.colisao_cobra(p2.segmentos_cobra);
+
+		p2.colisao_cobra(p1.segmentos_cobra);
+		p2.colisao_cobra(p2.segmentos_cobra);
 
 		//Mover cobra
 		p1.atualizar_posicoes();
+		p2.atualizar_posicoes();
 
 		//Plano de Fundo
 		SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
 		SDL_RenderClear(renderer);
 
 		//Desenhar macas
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 150);
-		for(int i=0; i<frequencia_maca; i++){
-			SDL_RenderFillRect(renderer, &(macas[i]));
-		}
+		myApple.desenhar_macas(&renderer, {255, 0, 0});
 
 		//Desenhar a minhoca
 		p1.desenhar_cobra(&renderer);
+		p2.desenhar_cobra(&renderer);
 
 		SDL_RenderPresent(renderer);
 
