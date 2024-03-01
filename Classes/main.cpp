@@ -14,11 +14,10 @@ const int WIDTH = 1080, HEIGHT = 600;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
-int TAM_COBRA=10;
 short frequencia_maca=20;
 short total_macas=frequencia_maca;
 short minimo_sorteio=1;
-bool cobra_colorida=0;
+int TAM_COBRA = 10;
 
 void sortear_macas(vector<SDL_Rect>& macas, bool primeiro_sorteio=false){
 	for_each(macas.begin(), macas.end(), [&](auto& rect_maca){
@@ -32,23 +31,6 @@ void sortear_macas(vector<SDL_Rect>& macas, bool primeiro_sorteio=false){
 		}
 	});
 }
-
-void colorir_cobra(vector<trio>& cores){
-	for_each(cores.begin(), cores.end(), [&](trio& cor){
-		cor.r = rand()%256;
-		cor.g = rand()%256;
-		cor.b = rand()%256;
-	});
-}
-
-void descolorir_cobra(vector<trio>& cores, trio cor_segmentos={0, 0, 0}){
-            for_each(cores.begin(), cores.end(), [&](trio& cor){
-                cor.r = cor_segmentos.r;
-                cor.g = cor_segmentos.g;
-                cor.b = cor_segmentos.b;
-            });
-        }
-
 
 int main(int argc, char* argv[]) {
 	Player p1{WIDTH, HEIGHT, {SDLK_UP, SDLK_DOWN, SDLK_RIGHT, SDLK_LEFT}};
