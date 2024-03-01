@@ -1,37 +1,15 @@
-run: main
-	@./a.out
-	@rm a.out
-
-main: main.c
-	gcc main.c $(shell pkg-config --cflags --libs sdl2)
-
-runcpp: cpp
-	@./a.out
-	@rm a.out
-
-cpp: main.cpp player
-	g++ -std=c++20 main.cpp $(shell pkg-config --cflags --libs sdl2) -o main.o
-	gcc main.o player.o
-
 player: player.cpp
-	g++ -std=c++20 player.cpp -o player.o
+	g++ player.cpp $(shell pkg-config --cflags --libs sdl2) -c -o player.o
 
-play: player.cpp
-	g++ -std=c++20 player.cpp $(shell pkg-config --cflags --libs sdl2)
+main: main.cpp
+	g++ main.cpp $(shell pkg-config --cflags --libs sdl2) -c -o main.o
 
-windows: main.c
-	gcc -std=c17 main.c -ISDL2\include -LSDL2\lib -Wall -lmingw32 -lSDL2main -lSDL2 -o main.exe
+run: main player
+	g++ main.o player.o $(shell pkg-config --cflags --libs sdl2) -o saida.out
+	rm main.o
+	rm player.o
+	./saida.out
 
-cwin: main.c
-	gcc .\main.c -I .\SDL2\x86_64-w64-mingw32\include\ -L .\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2 -o main.exe
-
-cppwin: main.cpp
-	g++ .\main.cpp -I .\SDL2\x86_64-w64-mingw32\include\ -L .\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2 -o main.exe
-	
-runwin: cwin
-	@ ./main.exe
-	@ rm main.exe
-
-runwincpp: cppwin
-	@ ./main.exe
-	@ rm main.exe
+teste:
+	g++ player.cpp $(shell pkg-config --cflags --libs sdl2)
+	./a.out

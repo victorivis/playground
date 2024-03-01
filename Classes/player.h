@@ -30,16 +30,21 @@ class Player{
         short int direcao = -1;
         bool cobra_colorida=false;
 
+        int cima, baixo, esquerda, direita;
+
         SDL_Rect cabeca = {500, 500, TAM_COBRA, TAM_COBRA};
         std::deque<SDL_Rect> segmentos_cobra;
-        vector<int> controles;
+        std::vector<trio> cores;
+        std::vector<int> controles;
 
-    //Funcoes
     public:
-        void Player(int w, int h, vector<int> z);
+        public:
+        Player(int w, int h, std::vector<int> z);
         void executar_controles(int tecla);
         void mover_cobra(int direcao);
-        void colorir_cobra(vector<trio>& cores);
-        void descolorir_cobra(vector<trio>& cores, trio cor_segmentos={0, 0, 0});
-        void colisao_cobra(deque<SDL_Rect>& cobra_generica);
+        void colorir_cobra();
+        void descolorir_cobra(trio cor_segmentos);
+        void colisao_cobra(std::deque<SDL_Rect>& cobra_generica);
+        void desenhar_cobra(SDL_Renderer** renderer);
+        void atualizar_posicoes();
 };
