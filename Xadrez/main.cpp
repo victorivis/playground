@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <iostream>
+#include <cstdio>
 #include "som.h"
 
 const int WIDTH = 1080, HEIGHT = 600;
@@ -7,11 +8,89 @@ const int WIDTH = 1080, HEIGHT = 600;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
+struct Lance{
+	int src_i;
+	int src_j;
+	int dst_i;
+	int dst_j;
+};
+
+enum Cor{
+	Black, White
+};
+
 enum Pecas{
 	Vazio, Agua, Borda,
 	BlackPawn, BlackKnight, BlackBishop, BlackRook, BlackQueen, BlackKing,
 	WhitePawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteQueen, WhiteKing
 };
+
+enum Direcao{
+    Norte, Sul, Leste, Oeste, Nordeste, Suldeste, Suldoeste, Noroeste
+};
+
+void executar_lance(std::vector<std::vector<int>>& tabuleiro, Lance& lance){
+    tabuleiro[lance.dst_i][lance.dst_j] = tabuleiro[lance.src_i][lance.src_j];
+    tabuleiro[lance.src_i][lance.src_j] = Vazio;
+}
+
+bool mover_peca(std::vector<std::vector<int>>& tabuleiro, std::pair<int, int>& origem, int direcao, bool capturar){
+    int tamanho = tabuleiro.size();
+    bool saida;
+    switch(direcao){
+        case Norte:
+            origem.first+1 < tamanho && (capturar || tabuleiro[origem.first+1][origem.second]==Vazio) ? 
+                saida=true : saida=false; break;
+        
+        case Sul:
+            origem.first-1 >= 0 && (capturar || tabuleiro[origem.first-1][origem.second]==Vazio) ? 
+                saida=true : saida=false; break;
+                
+        case Leste:
+            origem.second+1 < tamanho && (capturar || tabuleiro[origem.first][origem.second+1]==Vazio) ? 
+                saida=true : saida=false; break;
+        
+        case Oeste:
+            origem.second-1 >= 0 && (capturar || tabuleiro[origem.first][origem.second-1]==Vazio) ? 
+                saida=true : saida=false; break;
+    }
+    
+    return saida;
+}
+
+std::vector<Lance> possiveis_lances(std::vector<std::vector<int>>& tabuleiro, int cor){
+	std::vector<Lance> saida;
+	
+	for(uint8_t i=0; i<tabuleiro.size(); i++){
+		for(uint8_t j=0; j<tabuleiro[i].size(); j++){
+			switch(tabuleiro[i][j]){
+				case WhitePawn: 
+					if(j+1 <= tabuleiro[i].size()-1 && tabuleiro[i][j+1]==Vazio) 
+					    saida.push_back({i, j, i, j+1}); 
+					if(j+1 <= tabuleiro[i].size()-1 && tabuleiro[i][j+1]==Vazio) 
+					    saida.push_back({i, j, i, j+1});
+					if(j+1 <= tabuleiro[i].size()-1 && tabuleiro[i][j+1]==Vazio) 
+					    saida.push_back({i, j, i, j+1}); 
+					break;
+/*
+                case WhitePawn:
+					if(mover_peca(Norte, false, tabuleiro, {i, j}))
+						saida.push_back({i, j, i+1, j});
+
+					break;
+				
+				case WhiteRook:
+					int pos_x = i, pos_y = j;
+					while(mover_peca(Norte, false, tabuleiro, {pos_x, pos_y})){
+						saida.push_back({pos_y, pos_x, pos_y+1, pos_x});
+					}	
+*/
+			}
+		}
+	}
+	
+	return saida;
+}
 
 void desenhar_tabuleiro(int casas_por_linha, int inicio_x, int inicio_y, int tam_quadrado){
 	int padrao=1;
@@ -79,7 +158,11 @@ int main(int argc, char* argv[]) {
 				if(pos_x <= final_x && pos_x >= inicio_x) bool_x=1;
 				if(pos_y <= final_y && pos_y >= inicio_y) bool_y=1;
 
-				if(bool_x && bool_y) playSound(sound);
+				if(bool_x && bool_y){
+					printf("pos x: %d   pos y: %d\n", (pos_x-inicio_x)/tam_quadrado, (pos_y-inicio_y)/tam_quadrado);
+					
+					playSound(sound);
+				}
 			}
 		}
 		//Carregar plano de fundo
