@@ -1,30 +1,13 @@
-run: main
-	@./a.out
-	@rm a.out
+FLAGS = -lm -D_REENTRANT -I/usr/include/SDL2 -lSDL2
+
+run: main som
+	gcc main.o som.o $(FLAGS) -o saida.out
+	rm -f *.o
+	./saida.out
+	rm saida.out
 
 main: main.c
-	gcc main.c $(shell pkg-config --cflags --libs sdl2)
+	gcc main.c $(FLAGS) -c -o main.o
 
-runcpp: cpp
-	@./a.out
-	@rm a.out
-
-cpp: main.cpp
-	g++ -std=c++20 main.cpp $(shell pkg-config --cflags --libs sdl2)
-
-windows: main.c
-	gcc -std=c17 main.c -ISDL2\include -LSDL2\lib -Wall -lmingw32 -lSDL2main -lSDL2 -o main.exe
-
-cwin: main.c
-	gcc .\main.c -I .\SDL2\x86_64-w64-mingw32\include\ -L .\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2 -o main.exe
-
-cppwin: main.cpp
-	g++ .\main.cpp -I .\SDL2\x86_64-w64-mingw32\include\ -L .\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2 -o main.exe
-	
-runwin: cwin
-	@ ./main.exe
-	@ rm main.exe
-
-runwincpp: cppwin
-	@ ./main.exe
-	@ rm main.exe
+som: som.c
+	gcc som.c $(FLAGS) -c -o som.o	
