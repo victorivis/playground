@@ -1,6 +1,14 @@
 #pragma once
+#include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL.h>
-#include <stdio.h>
+#include <iostream>
+#include <vector>
 
-void generateSound(Uint8 *buffer, int length, int FREQUENCY);
-void playSound(int FREQUENCY);
+int loadMusic(const char* filename);
+int loadSound(const char* filename);
+void setVolume(int v);
+int playMusic(int m);
+int playSound(int s);
+int initMixer();
+void quitMixer();
+void togglePlay();

@@ -1,13 +1,13 @@
-FLAGS = -lm -D_REENTRANT -I/usr/include/SDL2 -lSDL2
+FLAGS = -D_REENTRANT -I/usr/include/SDL2 -lSDL2 -lSDL2_mixer
 
 run: main som
-	gcc main.o som.o $(FLAGS) -o saida.out
-	rm -f *.o
+	g++ main.o som.o $(FLAGS) -o saida.out
+	rm -rf *.o
 	./saida.out
 	rm saida.out
 
-main: main.c
-	gcc main.c $(FLAGS) -c -o main.o
+main: main.cpp
+	g++ main.cpp $(FLAGS) -c -o main.o
 
-som: som.c
-	gcc som.c $(FLAGS) -c -o som.o	
+som: som.cpp
+	g++ som.cpp $(FLAGS) -c -o som.o	

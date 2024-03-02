@@ -2,3 +2,4 @@ platform shooter bem bonito: https://www.youtube.com/watch?v=0PRygAyd4Zk
 3 mmorpg bem criativos (com dicas de networking): https://www.youtube.com/watch?v=jJw7kYHp-yc
 base defender com geracao procedural: https://www.youtube.com/watch?v=hhzU34zgBM4
 movimentação legal de uma nave: https://www.youtube.com/watch?v=fy60pWWqAiI
+Canal que utiliza SDL e apresenta mecanicas de jogos: https://www.youtube.com/watch?v=4OtOei6dus4&list=PLVotA8ycjnCuhoO3E6NBUAeEKa5-vlHgZ
