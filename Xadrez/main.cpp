@@ -92,7 +92,32 @@ std::vector<Lance> possiveis_lances(std::vector<std::vector<int>>& tabuleiro, in
 	return saida;
 }
 
-void desenhar_tabuleiro(int casas_por_linha, int inicio_x, int inicio_y, int tam_quadrado){
+std::vector<std::vector<SDL_Rect>> criar_tabuleiro(int casas_por_linha, int inicio_x, int inicio_y, int tam_quadrado){
+	
+	std::vector<std::vector<SDL_Rect>> tabuleiro(casas_por_linha);
+	for(int j=0; j<casas_por_linha; j++){
+		for(int i=0; i<casas_por_linha; i++){
+			tabuleiro[j].push_back({i*tam_quadrado+inicio_x, j*tam_quadrado+inicio_y, tam_quadrado, tam_quadrado});
+		}
+	}
+
+	return tabuleiro;
+}
+
+void desenhar_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro){
+	bool padrao=true;
+
+	for(int i=0; i<tabuleiro.size(); i++){
+		for(int j=0; j<tabuleiro[i].size(); i++){
+			padrao ? SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255) : SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			SDL_RenderFillRect(renderer, &(tabuleiro[i][j]));
+			padrao = !padrao;
+		}
+		if(tabuleiro[i].size()%2==0) padrao = !padrao;
+	}
+}
+
+void desenhar_tabuleiro_antigo(int casas_por_linha, int inicio_x, int inicio_y, int tam_quadrado){
 	int padrao=1;
 
 	for(int j=0; j<casas_por_linha; j++){
@@ -106,6 +131,15 @@ void desenhar_tabuleiro(int casas_por_linha, int inicio_x, int inicio_y, int tam
 		}
 		
 		if(casas_por_linha%2==0) padrao = !padrao;
+	}
+}
+
+void mostrar_posicoes_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro){
+	for(int i=0; i<tabuleiro.size(); i++){
+		for(int j=0; j<tabuleiro[i].size(); j++){
+			printf("x%d: %d y%d: %d  ", i, tabuleiro[i][j].x, j, tabuleiro[i][j].y);
+		}
+		printf("\n");
 	}
 }
 
@@ -124,13 +158,15 @@ int main(int argc, char* argv[]) {
 	setVolume(30);
 
 	//Variaveis de configuracao
-	int inicio_x=10;
-	int inicio_y = 30;
+	int inicio_x=30;
+	int inicio_y=50;
 	int casas_por_linha = 8;
 	int tam_quadrado = 50;
 
 	int final_x = inicio_x + (casas_por_linha)*tam_quadrado;
 	int final_y = inicio_y + (casas_por_linha)*tam_quadrado;
+
+	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 
 	SDL_Event evento;
 	int rodar=1;
@@ -169,7 +205,18 @@ int main(int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
 		SDL_RenderClear(renderer);
 
-		desenhar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
+		bool padrao=true;
+		for(int i=0; i<tabuleiro.size(); i++){
+			for(int j=0; j<tabuleiro[i].size(); j++){
+				padrao ? SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255) : SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+				SDL_RenderFillRect(renderer, &(tabuleiro[i][j]));
+
+				padrao = !padrao;
+			}
+		}
+
+		//desenhar_tabuleiro_antigo(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
+		//desenhar_tabuleiro(tabuleiro);
 		SDL_RenderPresent(renderer);
 
 		SDL_Delay(100);
