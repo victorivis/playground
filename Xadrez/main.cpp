@@ -49,8 +49,16 @@ void executar_lance(std::vector<std::vector<int>>& tabuleiro, Lance& lance){
 	if(origem == BlackStaticPawn) tabuleiro[lance.src_i][lance.src_j] = BlackPawn;
 	else if(origem == WhiteStaticPawn) tabuleiro[lance.src_i][lance.src_j] = WhitePawn;
 
+	
 	tabuleiro[lance.dst_i][lance.dst_j] = tabuleiro[lance.src_i][lance.src_j];
     tabuleiro[lance.src_i][lance.src_j] = Vazio;
+
+	if(lance.dst_i == tabuleiro.size()-1 && tabuleiro[lance.dst_i][lance.dst_j]==BlackPawn){
+		tabuleiro[lance.dst_i][lance.dst_j]=BlackQueen;
+	}
+	else if(lance.dst_i == 0 && tabuleiro[lance.dst_i][lance.dst_j]==WhitePawn){
+		tabuleiro[lance.dst_i][lance.dst_j]=WhiteQueen;
+	}
 }
 
 int calcular_destino(int direcao, std::pair<int, int>& origem, std::vector<std::vector<int>>& tabuleiro, int num_movimentos=1){
@@ -473,10 +481,16 @@ void highlight_proximo_lance(SDL_Rect posicao, bool capturar){
 		SDL_RenderFillRect(renderer, &posicao);
 }
 
-void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vector<int>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro){
+void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vector<int>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro, bool inverter){
 	for(int i=0; i<lances.size(); i++){
-		int peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
-		highlight_proximo_lance(quadrado_tabuleiro[lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
+		if(!inverter){
+			int peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
+			highlight_proximo_lance(quadrado_tabuleiro[lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
+		}
+		else{
+			int peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
+			highlight_proximo_lance(quadrado_tabuleiro[pecas_tabuleiro.size()-1-lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
+		}
 	}
 }
 
@@ -492,8 +506,7 @@ std::vector<std::vector<SDL_Rect>> criar_tabuleiro(int casas_por_linha, int inic
 	return tabuleiro;
 }
 
-void desenhar_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro){
-	bool padrao=true;
+void desenhar_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro, bool padrao){
 	for(int i=0; i<tabuleiro.size(); i++){
 		for(int j=0; j<tabuleiro[i].size(); j++){
 			padrao ? SDL_SetRenderDrawColor(renderer, 0, 180, 0, 255) : SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -618,6 +631,50 @@ void limpar_lances(std::vector<Lance>& lances){
 	}
 }
 
+void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado, std::vector<std::vector<int>>& pecas_tabuleiro){
+	static int clique = Selecionar;
+	static int turno = White;
+	int peca = pecas_tabuleiro[i][j];
+
+	bool cor_valida=true;
+
+	if(turno == White){
+		cor_valida = branco(peca);
+	}
+	else if(turno == Black){
+		cor_valida = preto(peca);
+	}
+
+	printf("i: %d j: %d\n", i, j);
+	//playSound(sound);
+	
+	if(clique == Selecionar){
+		printf("Selecionar\n");
+		limpar_lances(lances_clicado);
+		if(cor_valida && peca!=Vazio && peca!=Agua){
+			lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro);
+			imprimir_lances(lances_clicado);
+			clique = Executar;
+		}
+	}
+	else if(clique == Executar){
+		printf("Executar\n");
+		printf("total lances_clicado: %d\n", (int) lances_clicado.size());
+		for(int contador=0; contador<lances_clicado.size(); contador++){
+			printf("%d == %d && %d == %d\n",lances_clicado[contador].dst_i, i, lances_clicado[contador].dst_j, j);
+			if(lances_clicado[contador].dst_i == i && lances_clicado[contador].dst_j == j){
+				printf("Execuntando lance\n");
+				executar_lance(pecas_tabuleiro, lances_clicado[contador]);
+				if(turno==White) turno=Black;
+				else if(turno==Black) turno=White;
+				break;
+			}
+		}
+		limpar_lances(lances_clicado);
+		clique = Selecionar;
+	}
+}
+
 int main(int argc, char* argv[]) {
 	
 	//Criar Janela
@@ -630,6 +687,8 @@ int main(int argc, char* argv[]) {
 	//iniciar biblioteca som.h
 	initMixer();
 	int sound = loadSound("assets/move-self.mp3");
+	int som_captura = loadSound("assets/capture.mp3");
+
 	setVolume(30);
 
 	//Variaveis de configuracao
@@ -645,14 +704,14 @@ int main(int argc, char* argv[]) {
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 	
 	std::vector<std::vector<int>> pecas_tabuleiro = {
-		{BlackRook, BlackKnight, BlackBishop, BlackKing, BlackQueen, BlackBishop, BlackKnight, BlackRook},
+		{BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRook},
 		{BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn},
-		{WhiteRook, WhiteKnight, WhiteBishop, WhiteKing, WhiteQueen, WhiteBishop, WhiteKnight, WhiteRook},
+		{WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing, WhiteBishop, WhiteKnight, WhiteRook},
 	};
 	/*
 	std::vector<std::vector<int>> pecas_tabuleiro = {
@@ -685,7 +744,7 @@ int main(int argc, char* argv[]) {
 	SDL_Event evento;
 	int rodar=1;
 	bool sentido_brancas=true;
-	int clique = Selecionar;
+	bool inverter=false;
 
 	//Execucao do jogo
 	while(rodar){
@@ -721,8 +780,7 @@ int main(int argc, char* argv[]) {
 						break;
 
 					case 'p': mostrar_pecas_tabuleiro(pecas_tabuleiro);	break;
-					
-					case 'o': sentido_brancas = !sentido_brancas; break;
+					case 'o': sentido_brancas = !sentido_brancas; inverter = !inverter; break;
 				}
 			}
 
@@ -738,32 +796,8 @@ int main(int argc, char* argv[]) {
 				if(bool_x && bool_y){
 					int j = (pos_x-inicio_x)/tam_quadrado;
 					int i = (pos_y-inicio_y)/tam_quadrado;
-					printf("i: %d j: %d\n", i, j);
-					playSound(sound);
-					
-					if(clique == Selecionar){
-						printf("Selecionar\n");
-						limpar_lances(lances_clicado);
-						if(pecas_tabuleiro[i][j]!=Vazio && pecas_tabuleiro[i][j]!=Agua){
-							lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro);
-							imprimir_lances(lances_clicado);
-							clique = Executar;
-						}
-					}
-					else if(clique == Executar){
-						printf("Executar\n");
-						printf("total lances_clicado: %d\n", (int) lances_clicado.size());
-						for(int contador=0; contador<lances_clicado.size(); contador++){
-							printf("%d == %d && %d == %d\n",lances_clicado[contador].dst_i, i, lances_clicado[contador].dst_j, j);
-							if(lances_clicado[contador].dst_i == i && lances_clicado[contador].dst_j == j){
-								printf("Execuntando lance\n");
-								executar_lance(pecas_tabuleiro, lances_clicado[contador]);
-								break;
-							}
-						}
-						limpar_lances(lances_clicado);
-						clique = Selecionar;
-					}
+					if(inverter) i = pecas_tabuleiro.size()-1-i;
+					operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro);
 				}
 			}
 		}
@@ -771,7 +805,7 @@ int main(int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
 		SDL_RenderClear(renderer);
 
-		desenhar_tabuleiro(tabuleiro);
+		desenhar_tabuleiro(tabuleiro, inverter);
 
 		if(sentido_brancas){
 			for(int i=0; i<pecas_tabuleiro.size(); i++){
@@ -789,7 +823,7 @@ int main(int argc, char* argv[]) {
 		}
 
 		if(lances_clicado.size()!=0){
-			highlight_possiveis_lances(lances_clicado, pecas_tabuleiro, tabuleiro);
+			highlight_possiveis_lances(lances_clicado, pecas_tabuleiro, tabuleiro, inverter);
 		}
 		
 		SDL_RenderPresent(renderer);
