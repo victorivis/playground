@@ -1,3 +1,5 @@
+WFLAGS = -I ..\..\SDL2\x86_64-w64-mingw32\include\ -L ..\..\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2
+
 run: main
 	@./a.out
 	@rm a.out
@@ -12,5 +14,9 @@ runcpp: cpp
 cpp: main.cpp
 	g++ main.cpp $(shell pkg-config --cflags --libs sdl2)
 
-windows: main.c
-	gcc -std=c17 main.c -ISDL2\include -LSDL2\lib -Wall -lmingw32 -lSDL2main -lSDL2 -o main.exe
+winc: main.c
+	gcc -std=c17 main.c $(WFLAGS) -o main.exe
+
+winrun: winc
+	.\main.exe
+	del main.exe
