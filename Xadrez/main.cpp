@@ -12,16 +12,16 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
 struct Lance{
-	int src_i;
-	int src_j;
-	int dst_i;
-	int dst_j;
+	char src_i;
+	char src_j;
+	char dst_i;
+	char dst_j;
 };
 
 struct FEN{
 	Lance move;
-	int peca;
-	int origem;
+	char peca;
+	char origem;
 };
 
 enum Cor{
@@ -47,7 +47,7 @@ enum Clique{
 	Selecionar, Executar
 };
 
-void executar_lance(std::vector<std::vector<int>>& tabuleiro, Lance& lance){
+void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance){
 	//Previne de acessar memoria indevida
 	if(lance.src_i<0 || lance.src_i>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
 	if(lance.src_j<0 || lance.src_j>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
@@ -78,7 +78,7 @@ void executar_lance(std::vector<std::vector<int>>& tabuleiro, Lance& lance){
 	}
 }
 
-int calcular_destino(int direcao, std::pair<int, int>& origem, std::vector<std::vector<int>>& tabuleiro, int num_movimentos=1){
+int calcular_destino(int direcao, std::pair<char, char>& origem, std::vector<std::vector<char>>& tabuleiro, int num_movimentos=1){
 	switch(direcao){
 		case Norte:
 			return tabuleiro[origem.first-num_movimentos][origem.second];
@@ -137,11 +137,11 @@ int calcular_destino(int direcao, std::pair<int, int>& origem, std::vector<std::
 }
 
 //Refatorar esse codigo
-bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<int>>& tabuleiro, std::pair<int, int> origem, int num_movimentos=1){
+bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<char>>& tabuleiro, std::pair<char, char> origem, int num_movimentos=1){
     int tamanho = tabuleiro.size();
     bool saida;
 	
-	int peca = tabuleiro[origem.first][origem.second];
+	char peca = tabuleiro[origem.first][origem.second];
 
 	bool eh_branca;
 	if(branco(peca)) eh_branca=true;
@@ -263,7 +263,7 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<in
 	}
 }
 
-std::pair<int, int> par_mover_direcao(int direcao, std::pair<int, int>& origem, int num_movimentos=1){
+std::pair<char, char> par_mover_direcao(int direcao, std::pair<char, char>& origem, int num_movimentos=1){
 	switch(direcao){
 		case Sul:
 			return {origem.first+num_movimentos, origem.second};
@@ -320,7 +320,7 @@ std::pair<int, int> par_mover_direcao(int direcao, std::pair<int, int>& origem, 
 	return {-1, -1};
 }
 
-Lance mover_direcao(int direcao, std::pair<int, int> origem, int num_movimentos=1){
+Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimentos=1){
 	switch(direcao){
 		case Sul:
 			return {origem.first, origem.second, origem.first+num_movimentos, origem.second};
@@ -377,7 +377,7 @@ Lance mover_direcao(int direcao, std::pair<int, int> origem, int num_movimentos=
 	return {-1, -1, -1, -1};
 }
 
-void sequencia_lances(std::vector<int>& direcoes, std::pair<int, int> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<int>>& tabuleiro, int num_movimentos){
+void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<char>>& tabuleiro, int num_movimentos){
 	for(int i=0; i<direcoes.size(); i++){
 		if(tipo_lance == Roque){
 			int contador=1;
@@ -407,9 +407,9 @@ void sequencia_lances(std::vector<int>& direcoes, std::pair<int, int> origem, in
 	}
 }
 
-std::vector<Lance> possiveis_lances_peca(std::pair<int, int> origem, std::vector<std::vector<int>>& tabuleiro){
+std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vector<std::vector<char>>& tabuleiro){
 	std::vector<Lance> saida;
-	std::vector<int> direcoes;
+	std::vector<char> direcoes;
 
 	switch(tabuleiro[origem.first][origem.second]){
 		case BlackStaticPawn:
@@ -479,7 +479,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<int, int> origem, std::vector
 	return saida;
 }
 
-std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<int>>& tabuleiro, int cor){
+std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<char>>& tabuleiro, int cor){
 	std::vector<Lance> saida;
 	bool cor_certa=true;
 	
@@ -493,7 +493,7 @@ std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<int>>& tabulei
 			}
 			
 			if(cor_certa){
-				std::pair<int, int> origem = {i, j};
+				std::pair<char, char> origem = {i, j};
 				std::vector<Lance> atual = possiveis_lances_peca(origem, tabuleiro);
 				for(int k=0; k<atual.size(); k++){
 					saida.push_back(atual[k]);
@@ -521,25 +521,25 @@ void highlight_proximo_lance(SDL_Rect posicao, bool capturar){
 	SDL_RenderFillRect(renderer, &posicao);
 }
 
-void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vector<int>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro, bool inverter){
+void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro, bool inverter){
 	for(int i=0; i<lances.size(); i++){
 		if(!inverter){
-			int peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
+			char peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
 			highlight_proximo_lance(quadrado_tabuleiro[lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
 		}
 		else{
-			int peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
+			char peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
 			highlight_proximo_lance(quadrado_tabuleiro[pecas_tabuleiro.size()-1-lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
 		}
 	}
 }
 
-void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<int>>& pecas_tabuleiro, int& turno){
+void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno){
 	int posicao = (int) controle_lances.size()-1;
 	if(posicao!=-1){
 		Lance ultimo_lance = controle_lances[posicao].move;
-		int peca_capturada = controle_lances[posicao].peca;
-		int peca_origem = controle_lances[posicao].origem;
+		char peca_capturada = controle_lances[posicao].peca;
+		char peca_origem = controle_lances[posicao].origem;
 
 		pecas_tabuleiro[ultimo_lance.src_i][ultimo_lance.src_j] = peca_origem;
 		pecas_tabuleiro[ultimo_lance.dst_i][ultimo_lance.dst_j] = peca_capturada;
@@ -554,7 +554,7 @@ void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<i
 void mostrar_FEN(std::vector<FEN>& controle_lances){
 	for(int i=0; i<controle_lances.size(); i++){
 		Lance l = controle_lances[i].move;
-		int peca = controle_lances[i].peca;
+		char peca = controle_lances[i].peca;
 		printf("Origem: {%d, %d} Destino: {%d, %d} peca: %d\n", l.src_i, l.src_j, l.dst_i, l.dst_j, peca);
 	}
 	printf("\n");
@@ -592,7 +592,7 @@ void mostrar_posicoes_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro){
 	}
 }
 
-void mostrar_pecas_tabuleiro(std::vector<std::vector<int>>& pecas_tabuleiro){
+void mostrar_pecas_tabuleiro(std::vector<std::vector<char>>& pecas_tabuleiro){
 	for(int i=0; i<pecas_tabuleiro.size(); i++){
 		printf("{");
 		for(int j=0; j<pecas_tabuleiro[i].size(); j++){
@@ -603,7 +603,7 @@ void mostrar_pecas_tabuleiro(std::vector<std::vector<int>>& pecas_tabuleiro){
 	}
 }
 
-void desenhar_peca(SDL_Rect& retangulo, int peca){
+void desenhar_peca(SDL_Rect& retangulo, char peca){
     std::string caminho = "assets/pecasBMP/";
     std::string extensao = ".bmp";
     std::string nome_peca;
@@ -642,13 +642,13 @@ void desenhar_peca(SDL_Rect& retangulo, int peca){
 	}
 }
 
-void swap(int* a, int* b){
-	int temp = *a;
+void swap(auto* a, auto* b){
+	auto temp = *a;
 	*a = *b;
 	*b = temp;	
 }
 
-void inverter_tabuleiro(std::vector<std::vector<int>>& tabuleiro, int eixo){
+void inverter_tabuleiro(std::vector<std::vector<char>>& tabuleiro, int eixo){
 	//1 = horizontal, 2 = vertical, 3 = metade horizontal, 4 = metade vertical
 
 	int dist_x=tabuleiro.size(), dist_y=tabuleiro.size();
@@ -671,7 +671,7 @@ void inverter_tabuleiro(std::vector<std::vector<int>>& tabuleiro, int eixo){
 	}
 }
 
-void imprimir_tabuleiro(std::vector<std::vector<int>>& tabuleiro){
+void imprimir_tabuleiro(std::vector<std::vector<char>>& tabuleiro){
 	for(int i=0; i<tabuleiro.size()/2; i++){
 		for(int j=0; j<tabuleiro[i].size()/2; j++){
 			printf("%d ", tabuleiro[i][j]);
@@ -698,7 +698,7 @@ void limpar_lances(std::vector<Lance>& lances){
 }
 
 void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado, 
-	std::vector<std::vector<int>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
+	std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
 	static int clique = Selecionar;
 	int peca = pecas_tabuleiro[i][j];
 
@@ -726,10 +726,12 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 	else if(clique == Executar){
 		printf("Executar\n");
 		printf("total lances_clicado: %d\n", (int) lances_clicado.size());
+		bool executado=false;
 		for(int contador=0; contador<lances_clicado.size(); contador++){
 			printf("%d == %d && %d == %d\n",lances_clicado[contador].dst_i, i, lances_clicado[contador].dst_j, j);
 			if(lances_clicado[contador].dst_i == i && lances_clicado[contador].dst_j == j){
 				printf("Execuntando lance\n");
+				executado = true;
 
 				int org_i = lances_clicado[contador].src_i;
 				int org_j = lances_clicado[contador].src_j;
@@ -741,8 +743,14 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 				break;
 			}
 		}
+
 		limpar_lances(lances_clicado);
 		clique = Selecionar;
+
+		//Seleciona peca clicada se nao tiver executado um lance no ultimo clique
+		if(executado==false){
+			operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+		}
 	}
 }
 
@@ -773,7 +781,7 @@ int main(int argc, char* argv[]) {
 
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 	
-	std::vector<std::vector<int>> pecas_tabuleiro = {
+	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRook},
 		{BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},

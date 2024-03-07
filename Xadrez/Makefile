@@ -1,4 +1,4 @@
-FLAGS = -std=c++20 -D_REENTRANT -I/usr/include/SDL2 -lSDL2
+FLAGS = -std=c++20 -Wno-narrowing -D_REENTRANT -I/usr/include/SDL2 -lSDL2
 
 run: main
 	./saida.out
