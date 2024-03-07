@@ -151,7 +151,7 @@ void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance, std
 }
 
 //Refatorar esse codigo
-bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<char>>& tabuleiro, std::pair<char, char> origem, int num_movimentos){
+bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<char>>& tabuleiro, std::pair<char, char> origem, int num_movimentos, std::vector<FEN>* controle_lances){
     int tamanho = tabuleiro.size();
     bool saida;
 	
@@ -232,7 +232,25 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 			(origem.first+1 < tamanho && origem.second-2 >= 0) ?
 				saida = true : saida = false; break;
     }
+	
+	if(tipo_lance==EnPassant && saida){
+		return false;
 
+		/*
+		int ultima_peca = controle_lances[(int) controle_lances.size()-1].origem;
+		if(ultima_peca==BlackStaticPawn || ultima_peca==WhiteStaticPawn){
+			Lance ultimo_lance = controle_lances[(int) controle_lances.size()-1].move;
+			if(eh_branca){
+				std::pair<char, char> pos_destino = mover_direcao(p, origem, 1);
+				mover_direcao()
+				return 
+			}
+			else{
+
+			}
+		}
+		*/
+	}
 	if(tipo_lance==Roque && saida){
 		char destino = calcular_destino(direcao, origem, tabuleiro, num_movimentos);
 		if(eh_branca){
@@ -386,9 +404,14 @@ Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimento
 	return {-1, -1, -1, -1};
 }
 
-void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<char>>& tabuleiro, int num_movimentos){
+void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<char>>& tabuleiro, int num_movimentos, std::vector<FEN>* controle_lances){
 	for(int i=0; i<direcoes.size(); i++){
-		if(tipo_lance == Roque){
+
+		if(tipo_lance == EnPassant){
+			bool porEnquantoNao=true;
+		}
+
+		else if(tipo_lance == Roque){
 			int contador=1;
 			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
 				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
@@ -436,6 +459,13 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 			
 			direcoes = {Sudeste, Sudoeste};
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
+			if(controle_lances != NULL){
+				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1);
+			}
+			else{
+				printf("Nao calcula El Passant\n");
+			}
+
 			break;
 
 		case WhiteStaticPawn:
@@ -449,6 +479,8 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 
 			direcoes = {Nordeste, Noroeste};
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
+
+			sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1);
 			break;
 
 		case BlackStaticKing:
@@ -507,7 +539,7 @@ std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<char>>& tabule
 			
 			if(cor_certa){
 				std::pair<char, char> origem = {i, j};
-				std::vector<Lance> atual = possiveis_lances_peca(origem, tabuleiro);
+				std::vector<Lance> atual = possiveis_lances_peca(origem, tabuleiro, controle_lances);
 				for(int k=0; k<atual.size(); k++){
 					saida.push_back(atual[k]);
 				}
@@ -749,7 +781,7 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 		printf("Selecionar\n");
 		limpar_lances(lances_clicado);
 		if(cor_valida && peca!=Vazio && peca!=Agua){
-			lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro);
+			lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro, &controle_lances);
 			imprimir_lances(lances_clicado);
 			clique = Executar;
 		}
