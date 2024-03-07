@@ -1,8 +1,7 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <vector>
 #include <iostream>
 #include <cstdio>
-#include "som.h"
 
 #define branco(peca) (peca>=WhitePawn && peca<=WhiteKing)
 #define preto(peca) (peca>=BlackPawn && peca<=BlackKing)
@@ -220,6 +219,9 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<in
 				saida = true : saida = false; break;
     }
 	
+	if(tipo_lance==Roque){
+		return false;
+	}
 	//Da para comprimir esse codigo com MoverCapturar
 	if(saida && tipo_lance==Pulo){
 		//printf("If pulo");
@@ -378,7 +380,8 @@ Lance mover_direcao(int direcao, std::pair<int, int> origem, int num_movimentos=
 void sequencia_lances(std::vector<int>& direcoes, std::pair<int, int> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<int>>& tabuleiro, int num_movimentos){
 	for(int i=0; i<direcoes.size(); i++){
 		if(tipo_lance == Roque){
-			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
+			int contador=1;
+			while(movimento_permitido(direcoes[i], Roque, tabuleiro, origem, contador)){
 				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
 				lances.push_back(mover_direcao(direcoes[i], origem, contador));
 				contador+=num_movimentos;
@@ -601,8 +604,8 @@ void mostrar_pecas_tabuleiro(std::vector<std::vector<int>>& pecas_tabuleiro){
 }
 
 void desenhar_peca(SDL_Rect& retangulo, int peca){
-    std::string caminho = "assets/pecas/";
-    std::string extensao = ".png";
+    std::string caminho = "assets/pecasBMP/";
+    std::string extensao = ".bmp";
     std::string nome_peca;
 
     switch(peca){
@@ -631,7 +634,7 @@ void desenhar_peca(SDL_Rect& retangulo, int peca){
 
 	if(nome_peca.compare("Vazio")!=0 && nome_peca.compare("Agua")!=0 && nome_peca.compare("Borda")!=0){
 		std::string caminho_completo = caminho + nome_peca + extensao;
-		SDL_Surface* peca_sur = IMG_Load(caminho_completo.c_str());
+		SDL_Surface* peca_sur = SDL_LoadBMP(caminho_completo.c_str());
 		SDL_Texture* peca_tex = SDL_CreateTextureFromSurface(renderer, peca_sur);
 		SDL_RenderCopy(renderer, peca_tex, NULL, &retangulo);
 
@@ -753,11 +756,11 @@ int main(int argc, char* argv[]) {
 	renderer = SDL_CreateRenderer(window, -1, 0);
 	
 	//iniciar biblioteca som.h
-	initMixer();
-	int sound = loadSound("assets/move-self.mp3");
-	int som_captura = loadSound("assets/capture.mp3");
-
-	setVolume(30);
+	//
+	//initMixer();
+	//int sound = loadSound("assets/move-self.mp3");
+	//int som_captura = loadSound("assets/capture.mp3");
+	//setVolume(30);
 
 	//Variaveis de configuracao
 	int inicio_x=30;
@@ -801,7 +804,7 @@ int main(int argc, char* argv[]) {
 					case SDLK_ESCAPE:
 						rodar=0;
 						break;
-					case 'q': playSound(sound);	break;
+					//case 'q': playSound(sound);	break;
 					case 'w': inverter_tabuleiro(pecas_tabuleiro, 3); imprimir_tabuleiro(pecas_tabuleiro); break;
 					case 's': inverter_tabuleiro(pecas_tabuleiro, 4); imprimir_tabuleiro(pecas_tabuleiro); break;
 					case 'a': inverter_tabuleiro(pecas_tabuleiro, 1); imprimir_tabuleiro(pecas_tabuleiro); break;
@@ -878,7 +881,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	//liberar memoria de som.h
-	quitMixer();
+	//
+	//quitMixer();
 
 	return 0;
 }

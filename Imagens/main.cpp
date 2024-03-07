@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 	SDL_Renderer* renderer = NULL;
 
 	SDL_Init(SDL_INIT_VIDEO);
-	window = SDL_CreateWindow("Xadrez",
+	window = SDL_CreateWindow("Imagens",
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 							  WIDTH, HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, -1, 0);
