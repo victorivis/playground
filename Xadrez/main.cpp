@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdio>
+#include "main.h"
 
 #define branco(peca) (peca>=WhitePawn && peca<=WhiteKing)
 #define preto(peca) (peca>=BlackPawn && peca<=BlackKing)
@@ -11,74 +12,7 @@ const int WIDTH = 1080, HEIGHT = 600;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
-struct Lance{
-	char src_i;
-	char src_j;
-	char dst_i;
-	char dst_j;
-};
-
-struct FEN{
-	Lance move;
-	char peca;
-	char origem;
-};
-
-enum Cor{
-	Black, White, Both
-};
-
-enum Pecas{
-	Vazio, Agua, Borda,
-	BlackPawn, BlackStaticPawn, BlackKnight, BlackBishop, BlackRook, BlackStaticRook, BlackQueen, BlackStaticKing, BlackKing,
-	WhitePawn, WhiteStaticPawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteStaticRook, WhiteQueen, WhiteStaticKing, WhiteKing
-};
-
-enum Direcao{
-    Norte, Sul, Leste, Oeste, Nordeste, Sudeste, Sudoeste, Noroeste, CimaDireita, CimaEsquerda, 
-	BaixoDireita, BaixoEsquerda, DireitaCima, DireitaBaixo, EsquerdaCima, EsquerdaBaixo
-};
-
-enum Movimento{
-	Linha=20, Pulo, Capturar, Mover, MoverCapturar, Seguro, Roque
-};
-
-enum Clique{
-	Selecionar, Executar
-};
-
-void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance){
-	//Previne de acessar memoria indevida
-	if(lance.src_i<0 || lance.src_i>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
-	if(lance.src_j<0 || lance.src_j>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
-	if(lance.dst_i<0 || lance.dst_i>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
-	if(lance.dst_j<0 || lance.dst_j>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
-	
-	int origem = tabuleiro[lance.src_i][lance.src_j];
-	//Detecta se a peca ja se moveu alguma vez
-	switch(origem){
-		case BlackStaticPawn: tabuleiro[lance.src_i][lance.src_j] = BlackPawn; break;
-		case WhiteStaticPawn: tabuleiro[lance.src_i][lance.src_j] = WhitePawn; break;
-		case BlackStaticKing: tabuleiro[lance.src_i][lance.src_j] = BlackKing; break;
-		case WhiteStaticKing: tabuleiro[lance.src_i][lance.src_j] = WhiteKing; break;
-		case BlackStaticRook: tabuleiro[lance.src_i][lance.src_j] = BlackRook; break;
-		case WhiteStaticRook: tabuleiro[lance.src_i][lance.src_j] = WhiteRook; break;
-	}
-
-	//Propriamente faz o movimento
-	tabuleiro[lance.dst_i][lance.dst_j] = tabuleiro[lance.src_i][lance.src_j];
-    tabuleiro[lance.src_i][lance.src_j] = Vazio;
-
-	//Promocao de peao
-	if(lance.dst_i == tabuleiro.size()-1 && tabuleiro[lance.dst_i][lance.dst_j]==BlackPawn){
-		tabuleiro[lance.dst_i][lance.dst_j]=BlackQueen;
-	}
-	else if(lance.dst_i == 0 && tabuleiro[lance.dst_i][lance.dst_j]==WhitePawn){
-		tabuleiro[lance.dst_i][lance.dst_j]=WhiteQueen;
-	}
-}
-
-int calcular_destino(int direcao, std::pair<char, char>& origem, std::vector<std::vector<char>>& tabuleiro, int num_movimentos=1){
+char calcular_destino(int direcao, std::pair<char, char> origem, std::vector<std::vector<char>>& tabuleiro, int num_movimentos){
 	switch(direcao){
 		case Norte:
 			return tabuleiro[origem.first-num_movimentos][origem.second];
@@ -136,8 +70,88 @@ int calcular_destino(int direcao, std::pair<char, char>& origem, std::vector<std
 	return -1;
 }
 
+void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance, std::vector<FEN>* controle_lances){
+	//Previne de acessar memoria indevida
+	if(lance.src_i<0 || lance.src_i>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
+	if(lance.src_j<0 || lance.src_j>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
+	if(lance.dst_i<0 || lance.dst_i>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
+	if(lance.dst_j<0 || lance.dst_j>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
+	
+	int origem = tabuleiro[lance.src_i][lance.src_j];
+	int roque=0;
+
+	//Salva lance se for passado um vetor
+	if(controle_lances != NULL){
+		(*controle_lances).push_back({lance, tabuleiro[lance.dst_i][lance.dst_j], tabuleiro[lance.src_i][lance.src_j]});
+	}
+
+	//Detecta se a peca ja se moveu alguma vez
+	switch(origem){
+		case BlackStaticPawn: tabuleiro[lance.src_i][lance.src_j] = BlackPawn; break;
+		case WhiteStaticPawn: tabuleiro[lance.src_i][lance.src_j] = WhitePawn; break;
+		case BlackStaticRook: tabuleiro[lance.src_i][lance.src_j] = BlackRook; break;
+		case WhiteStaticRook: tabuleiro[lance.src_i][lance.src_j] = WhiteRook; break;
+
+		case BlackStaticKing:
+			if(lance.src_j-lance.dst_j==2) roque=Oeste;
+			else if(lance.src_j-lance.dst_j==-2) roque=Leste;
+			tabuleiro[lance.src_i][lance.src_j] = BlackKing;
+			break;
+
+		case WhiteStaticKing:
+			if(lance.src_j-lance.dst_j==2) roque=Oeste;
+			else if(lance.src_j-lance.dst_j==-2) roque=Leste;
+			tabuleiro[lance.src_i][lance.src_j] = WhiteKing;
+			break;
+	}
+
+	//Propriamente faz o movimento
+	tabuleiro[lance.dst_i][lance.dst_j] = tabuleiro[lance.src_i][lance.src_j];
+    tabuleiro[lance.src_i][lance.src_j] = Vazio;
+
+	
+	if(roque==Oeste){
+		std::pair<char, char> origem_rei = {lance.src_i, lance.src_j};
+		int contador=1;
+		char destino = calcular_destino(Oeste, origem_rei, tabuleiro, contador);
+		while((destino!=BlackStaticRook && destino != WhiteStaticRook) && contador<tabuleiro.size()){
+			contador++;
+			destino = calcular_destino(Oeste, origem_rei, tabuleiro, contador);
+		}
+		std::pair<char, char> origem_torre = par_mover_direcao(Oeste, origem_rei, contador);
+		std::pair<char, char> destino_torre = par_mover_direcao(Oeste, origem_rei, 1);
+
+		Lance torre = {origem_torre.first, origem_torre.second, destino_torre.first, destino_torre.second};
+		executar_lance(tabuleiro, torre, controle_lances);
+		printf("Rei Rocou! Esquerda\n");
+	}
+	else if(roque==Leste){
+		std::pair<char, char> origem_rei = {lance.src_i, lance.src_j};
+		int contador=1;
+		char destino = calcular_destino(Leste, origem_rei, tabuleiro, contador);
+		while((destino!=BlackStaticRook && destino != WhiteStaticRook) && contador<tabuleiro.size()){
+			contador++;
+			destino = calcular_destino(Leste, origem_rei, tabuleiro, contador);
+		}
+		std::pair<char, char> origem_torre = par_mover_direcao(Leste, origem_rei, contador);
+		std::pair<char, char> destino_torre = par_mover_direcao(Leste, origem_rei, 1);
+
+		Lance torre = {origem_torre.first, origem_torre.second, destino_torre.first, destino_torre.second};
+		executar_lance(tabuleiro, torre, controle_lances);
+		printf("Rei Rocou! Direita\n");
+	}
+
+	//Promocao de peao
+	if(lance.dst_i == tabuleiro.size()-1 && tabuleiro[lance.dst_i][lance.dst_j]==BlackPawn){
+		tabuleiro[lance.dst_i][lance.dst_j]=BlackQueen;
+	}
+	else if(lance.dst_i == 0 && tabuleiro[lance.dst_i][lance.dst_j]==WhitePawn){
+		tabuleiro[lance.dst_i][lance.dst_j]=WhiteQueen;
+	}
+}
+
 //Refatorar esse codigo
-bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<char>>& tabuleiro, std::pair<char, char> origem, int num_movimentos=1){
+bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<char>>& tabuleiro, std::pair<char, char> origem, int num_movimentos){
     int tamanho = tabuleiro.size();
     bool saida;
 	
@@ -149,7 +163,7 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 	else return false;
 
 	int capturar=tipo_lance;
-	if(tipo_lance == Capturar || tipo_lance == MoverCapturar){
+	if(tipo_lance == Capturar || tipo_lance == MoverCapturar || tipo_lance == Pulo || tipo_lance == Roque){
 		capturar=Capturar;
 	}
 
@@ -218,25 +232,20 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 			(origem.first+1 < tamanho && origem.second-2 >= 0) ?
 				saida = true : saida = false; break;
     }
-	
-	if(tipo_lance==Roque){
-		return false;
-	}
-	//Da para comprimir esse codigo com MoverCapturar
-	if(saida && tipo_lance==Pulo){
-		//printf("If pulo");
-		int destino = calcular_destino(direcao, origem, tabuleiro);
+
+	if(tipo_lance==Roque && saida){
+		char destino = calcular_destino(direcao, origem, tabuleiro, num_movimentos);
 		if(eh_branca){
-			return destino==Vazio || preto(destino);
+			return destino==WhiteStaticRook;
 		}
 		else{
-			return destino==Vazio || branco(destino);
+			return destino==BlackStaticRook;
 		}
-	}
+	}	
     if(capturar==Capturar && saida){
 		//printf("If captura");
-		int destino = calcular_destino(direcao, origem, tabuleiro, num_movimentos);
-		if(tipo_lance==MoverCapturar){
+		char destino = calcular_destino(direcao, origem, tabuleiro, num_movimentos);
+		if(tipo_lance==MoverCapturar || tipo_lance == Pulo){
 			if(eh_branca){
 				return destino==Vazio || preto(destino);
 			}
@@ -263,7 +272,7 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 	}
 }
 
-std::pair<char, char> par_mover_direcao(int direcao, std::pair<char, char>& origem, int num_movimentos=1){
+std::pair<char, char> par_mover_direcao(int direcao, std::pair<char, char>& origem, int num_movimentos){
 	switch(direcao){
 		case Sul:
 			return {origem.first+num_movimentos, origem.second};
@@ -320,7 +329,7 @@ std::pair<char, char> par_mover_direcao(int direcao, std::pair<char, char>& orig
 	return {-1, -1};
 }
 
-Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimentos=1){
+Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimentos){
 	switch(direcao){
 		case Sul:
 			return {origem.first, origem.second, origem.first+num_movimentos, origem.second};
@@ -381,10 +390,14 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 	for(int i=0; i<direcoes.size(); i++){
 		if(tipo_lance == Roque){
 			int contador=1;
-			while(movimento_permitido(direcoes[i], Roque, tabuleiro, origem, contador)){
+			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
 				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
-				lances.push_back(mover_direcao(direcoes[i], origem, contador));
-				contador+=num_movimentos;
+				//lances.push_back(mover_direcao(direcoes[i], origem, contador));
+				contador+=1;
+			}
+			if(movimento_permitido(direcoes[i], Roque, tabuleiro, origem, contador)){
+				printf("Roque possivel!\n");
+				lances.push_back(mover_direcao(direcoes[i], origem, 2));
 			}
 		}
 
@@ -407,7 +420,7 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 	}
 }
 
-std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vector<std::vector<char>>& tabuleiro){
+std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vector<std::vector<char>>& tabuleiro, std::vector<FEN>* controle_lances){
 	std::vector<Lance> saida;
 	std::vector<char> direcoes;
 
@@ -479,7 +492,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 	return saida;
 }
 
-std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<char>>& tabuleiro, int cor){
+std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<char>>& tabuleiro, int cor, std::vector<FEN>* controle_lances){
 	std::vector<Lance> saida;
 	bool cor_certa=true;
 	
@@ -536,6 +549,20 @@ void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vec
 
 void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno){
 	int posicao = (int) controle_lances.size()-1;
+
+	if(posicao >= 1 && turno!=Both){
+		int pseudo_turno = Both;
+		char ultima_peca = controle_lances[posicao].origem;
+		char penultima_peca = controle_lances[posicao-1].origem;
+
+		printf("Ultima peca: %d %d\n", ultima_peca, penultima_peca);
+		if(branco(ultima_peca) == branco(penultima_peca)){
+			printf("Reverter Dois Lances\n");
+			reverter_lance(controle_lances, pecas_tabuleiro, pseudo_turno);
+			posicao--;
+		}
+	}
+
 	if(posicao!=-1){
 		Lance ultimo_lance = controle_lances[posicao].move;
 		char peca_capturada = controle_lances[posicao].peca;
@@ -617,16 +644,20 @@ void desenhar_peca(SDL_Rect& retangulo, char peca){
 		case BlackPawn:       nome_peca = "BlackPawn";       break;
         case BlackKnight:     nome_peca = "BlackKnight";     break;
         case BlackBishop:     nome_peca = "BlackBishop";     break;
+		case BlackStaticRook:
         case BlackRook:       nome_peca = "BlackRook";       break;
         case BlackQueen:      nome_peca = "BlackQueen";      break;
+		case BlackStaticKing:
         case BlackKing:       nome_peca = "BlackKing";       break;
 
 		case WhiteStaticPawn:
         case WhitePawn:       nome_peca = "WhitePawn";       break;
         case WhiteKnight:     nome_peca = "WhiteKnight";     break;
         case WhiteBishop:     nome_peca = "WhiteBishop";     break;
+		case WhiteStaticRook:
         case WhiteRook:       nome_peca = "WhiteRook";       break;
         case WhiteQueen:      nome_peca = "WhiteQueen";      break;
+		case WhiteStaticKing:
         case WhiteKing:       nome_peca = "WhiteKing";       break;
 		default:
 			printf("Erro ao desenhar peca: %d\n", peca); exit(1);
@@ -733,11 +764,11 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 				printf("Execuntando lance\n");
 				executado = true;
 
-				int org_i = lances_clicado[contador].src_i;
-				int org_j = lances_clicado[contador].src_j;
-				controle_lances.push_back({lances_clicado[contador], pecas_tabuleiro[i][j], pecas_tabuleiro[org_i][org_j]});
+				//int org_i = lances_clicado[contador].src_i;
+				//int org_j = lances_clicado[contador].src_j;
+				//controle_lances.push_back({lances_clicado[contador], pecas_tabuleiro[i][j], pecas_tabuleiro[org_i][org_j]});
 				
-				executar_lance(pecas_tabuleiro, lances_clicado[contador]);
+				executar_lance(pecas_tabuleiro, lances_clicado[contador], &controle_lances);
 				if(turno==White) turno=Black;
 				else if(turno==Black) turno=White;
 				break;
@@ -782,14 +813,14 @@ int main(int argc, char* argv[]) {
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 	
 	std::vector<std::vector<char>> pecas_tabuleiro = {
-		{BlackRook, BlackKnight, BlackBishop, BlackQueen, BlackKing, BlackBishop, BlackKnight, BlackRook},
+		{BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook},
 		{BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn},
-		{WhiteRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteKing, WhiteBishop, WhiteKnight, WhiteRook},
+		{WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook},
 	};
 
 	std::vector<Lance> lances;
@@ -885,7 +916,7 @@ int main(int argc, char* argv[]) {
 		
 		SDL_RenderPresent(renderer);
 
-		SDL_Delay(200);
+		SDL_Delay(300);
 	}
 
 	//liberar memoria de som.h
