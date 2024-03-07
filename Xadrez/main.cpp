@@ -377,10 +377,18 @@ Lance mover_direcao(int direcao, std::pair<int, int> origem, int num_movimentos=
 
 void sequencia_lances(std::vector<int>& direcoes, std::pair<int, int> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<int>>& tabuleiro, int num_movimentos){
 	for(int i=0; i<direcoes.size(); i++){
-		if(tipo_lance == Linha){
+		if(tipo_lance == Roque){
+			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
+				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
+				lances.push_back(mover_direcao(direcoes[i], origem, contador));
+				contador+=num_movimentos;
+			}
+		}
+
+		else if(tipo_lance == Linha){
 			int contador=1;
 			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
-				printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
+				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
 				lances.push_back(mover_direcao(direcoes[i], origem, contador));
 				contador+=num_movimentos;
 			}
@@ -429,10 +437,9 @@ std::vector<Lance> possiveis_lances_peca(std::pair<int, int> origem, std::vector
 
 		case BlackStaticKing:
 		case WhiteStaticKing:
-			/*
-			direcoes = {Nordeste, Noroeste};
+			direcoes = {Leste, Oeste};
 			sequencia_lances(direcoes, origem, Roque, saida, tabuleiro, 2);
-			*/
+
 		case BlackKing:
 		case WhiteKing:
 			direcoes = {Norte, Sul, Leste, Oeste, Nordeste, Noroeste, Sudeste, Sudoeste};
