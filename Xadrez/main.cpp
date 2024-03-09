@@ -77,8 +77,30 @@ void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance, std
 	if(lance.dst_i<0 || lance.dst_i>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
 	if(lance.dst_j<0 || lance.dst_j>=tabuleiro.size()) printf("%d %d %d %d\n", lance.src_i, lance.src_j, lance.dst_i, lance.dst_j), exit(404);
 	
-	int origem = tabuleiro[lance.src_i][lance.src_j];
+	char origem = tabuleiro[lance.src_i][lance.src_j];
 	int roque=0;
+
+	if(controle_lances != NULL && (*controle_lances).size()>1){
+		int ultima_posicao = (int) (*controle_lances).size()-1;
+		char ultima_peca = (*controle_lances)[ultima_posicao].origem;
+		if((origem==WhitePawn && ultima_peca==BlackStaticPawn) || (origem==BlackPawn && ultima_peca==WhiteStaticPawn)){
+			char i = lance.dst_i;
+			char j = lance.dst_j;
+
+			Lance ultimo_lance = (*controle_lances)[ultima_posicao].move;
+			//Peao esta do lado
+			if(ultimo_lance.src_j == j && ultimo_lance.dst_j == j){
+				//Se moveu duas casas
+				if(abs(ultimo_lance.src_i-i)==1 && abs(ultimo_lance.dst_i-i)==1){
+					Lance mover_lado={lance.src_i, lance.src_j, lance.src_i, j};
+					executar_lance(tabuleiro, mover_lado, controle_lances);
+					lance.src_j = j;
+
+					printf("Aconteceu En Passant\n");
+				}
+			}	
+		}
+	}
 
 	//Salva lance se for passado um vetor
 	if(controle_lances != NULL){
@@ -148,6 +170,44 @@ void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance, std
 	else if(lance.dst_i == 0 && tabuleiro[lance.dst_i][lance.dst_j]==WhitePawn){
 		tabuleiro[lance.dst_i][lance.dst_j]=WhiteQueen;
 	}
+}
+
+bool aconteceu_EnPassant(std::vector<FEN>* controle_lances, char* peca, std::pair<char, char>* endereco_origem, char direcao){
+	if(controle_lances!=NULL && (*controle_lances).size()>1){
+		Lance ultimo_lance;
+		bool eh_branca;
+		std::pair<char, char> origem;
+
+		int pos = (int) (*controle_lances).size()-1;
+		if(endereco_origem==NULL){
+			origem.first=(*controle_lances)[pos].move.src_i;
+			origem.second=(*controle_lances)[pos].move.src_j;
+			eh_branca=(*controle_lances)[pos].origem == WhitePawn;
+			pos--;
+		}
+		else{
+			if(peca==NULL) return false;
+			origem = (*endereco_origem);
+			eh_branca= (*peca)==WhitePawn;
+		}
+		char ultima_peca = (*controle_lances)[pos].origem;
+
+
+		if((eh_branca && ultima_peca==BlackStaticPawn) || (!eh_branca && ultima_peca==WhiteStaticPawn)){
+			std::pair<char, char> futura_posicao = par_mover_direcao(direcao, origem, 1);
+			char i = futura_posicao.first;
+			char j = futura_posicao.second;
+			Lance ultimo_lance = (*controle_lances)[pos].move;
+			//Peao esta do lado
+			if(ultimo_lance.src_j == j && ultimo_lance.dst_j == j){
+				//Se moveu duas casas
+				if(abs(ultimo_lance.src_i-i)==1 && abs(ultimo_lance.dst_i-i)==1){
+				return true;
+				}
+			}	
+		}
+	}
+	return false;
 }
 
 //Refatorar esse codigo
@@ -234,24 +294,31 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
     }
 	
 	if(tipo_lance==EnPassant && saida){
-		return false;
-
+		return aconteceu_EnPassant(controle_lances, &peca, &origem, direcao);
 		/*
-		int ultima_peca = controle_lances[(int) controle_lances.size()-1].origem;
-		if(ultima_peca==BlackStaticPawn || ultima_peca==WhiteStaticPawn){
-			Lance ultimo_lance = controle_lances[(int) controle_lances.size()-1].move;
-			if(eh_branca){
-				std::pair<char, char> pos_destino = mover_direcao(p, origem, 1);
-				mover_direcao()
-				return 
-			}
-			else{
+		if(controle_lances!=NULL && (*controle_lances).size() > 0){
+			int ultima_peca = (*controle_lances)[(int) (*controle_lances).size()-1].origem;
+			if((eh_branca && ultima_peca==BlackStaticPawn) || (!eh_branca && ultima_peca==WhiteStaticPawn)){
 
+				std::pair<char, char> futura_posicao = par_mover_direcao(direcao, origem, num_movimentos);
+				char i = futura_posicao.first;
+				char j = futura_posicao.second;
+
+				Lance ultimo_lance = (*controle_lances)[(int) (*controle_lances).size()-1].move;
+
+				//Peao esta do lado
+				if(ultimo_lance.src_j == j && ultimo_lance.dst_j == j){
+					//Se moveu duas casas
+					if(abs(ultimo_lance.src_i-i)==1 && abs(ultimo_lance.dst_i-i)==1){
+						return true;
+					}
+				}	
 			}
 		}
+		return false;
 		*/
 	}
-	if(tipo_lance==Roque && saida){
+	else if(tipo_lance==Roque && saida){
 		char destino = calcular_destino(direcao, origem, tabuleiro, num_movimentos);
 		if(eh_branca){
 			return destino==WhiteStaticRook;
@@ -260,7 +327,7 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 			return destino==BlackStaticRook;
 		}
 	}	
-    if(capturar==Capturar && saida){
+    else if(capturar==Capturar && saida){
 		//printf("If captura");
 		char destino = calcular_destino(direcao, origem, tabuleiro, num_movimentos);
 		if(tipo_lance==MoverCapturar || tipo_lance == Pulo){
@@ -408,6 +475,11 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 	for(int i=0; i<direcoes.size(); i++){
 
 		if(tipo_lance == EnPassant){
+			int contador=1;
+			if(movimento_permitido(direcoes[i], EnPassant, tabuleiro, origem, contador, controle_lances)){
+				//printf("Norte: %d, Direcao: %d\n", Norte, direcoes[i]);
+				lances.push_back(mover_direcao(direcoes[i], origem, 1));
+			}
 			bool porEnquantoNao=true;
 		}
 
@@ -460,7 +532,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 			direcoes = {Sudeste, Sudoeste};
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
 			if(controle_lances != NULL){
-				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1);
+				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
 			}
 			else{
 				printf("Nao calcula El Passant\n");
@@ -480,7 +552,12 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 			direcoes = {Nordeste, Noroeste};
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
 
-			sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1);
+			if(controle_lances != NULL){
+				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
+			}
+			else{
+				printf("Nao calcula El Passant\n");
+			}
 			break;
 
 		case BlackStaticKing:
@@ -948,7 +1025,7 @@ int main(int argc, char* argv[]) {
 		
 		SDL_RenderPresent(renderer);
 
-		SDL_Delay(300);
+		SDL_Delay(100);
 	}
 
 	//liberar memoria de som.h

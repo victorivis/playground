@@ -42,6 +42,7 @@ enum Clique{
 
 char calcular_destino(int direcao, std::pair<char, char> origem, std::vector<std::vector<char>>& tabuleiro, int num_movimentos=1);
 void executar_lance(std::vector<std::vector<char>>& tabuleiro, Lance& lance, std::vector<FEN>* controle_lances=NULL);
+bool aconteceu_EnPassant(std::vector<FEN>* controle_lances, char* peca=NULL, std::pair<char, char>* endereco_origem=NULL, char direcao=-1);
 bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<char>>& tabuleiro, std::pair<char, char> origem, int num_movimentos=1, std::vector<FEN>* controle_lances=NULL);
 std::pair<char, char> par_mover_direcao(int direcao, std::pair<char, char>& origem, int num_movimentos=1);
 Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimentos=1);
