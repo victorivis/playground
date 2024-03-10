@@ -7,7 +7,7 @@
 #define branco(peca) (peca>=WhitePawn && peca<=WhiteKing)
 #define preto(peca) (peca>=BlackPawn && peca<=BlackKing)
 
-const int WIDTH = 1080, HEIGHT = 600;
+const int WIDTH = 1080, HEIGHT = 620;
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -473,7 +473,7 @@ Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimento
 
 void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<char>>& tabuleiro, int num_movimentos, std::vector<FEN>* controle_lances){
 	for(int i=0; i<direcoes.size(); i++){
-
+		
 		if(tipo_lance == EnPassant){
 			int contador=1;
 			if(movimento_permitido(direcoes[i], EnPassant, tabuleiro, origem, contador, controle_lances)){
@@ -521,43 +521,53 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 
 	switch(tabuleiro[origem.first][origem.second]){
 		case BlackStaticPawn:
-			direcoes = {Sul};
-			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2);
-			direcoes.pop_back();
+			if(controle_lances!= (std::vector<FEN>*) 1){
+				direcoes = {Sul};
+				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2);
+				direcoes.pop_back();
+			}
 
         case BlackPawn:
-			if(movimento_permitido(Sul, Mover, tabuleiro, origem))
-				saida.push_back(mover_direcao(Sul, origem));
-			
 			direcoes = {Sudeste, Sudoeste};
+
+			if(controle_lances!= (std::vector<FEN>*) 1){
+				if(movimento_permitido(Sul, Mover, tabuleiro, origem))
+					saida.push_back(mover_direcao(Sul, origem));
+				if(controle_lances != NULL){
+					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
+				}
+				else{
+					printf("Nao calcula El Passant\n");
+				}
+			}
+
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
-			if(controle_lances != NULL){
-				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
-			}
-			else{
-				printf("Nao calcula El Passant\n");
-			}
 
 			break;
 
 		case WhiteStaticPawn:
-			direcoes = {Norte};
-			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2);
-			direcoes.pop_back();
+			if(controle_lances!= (std::vector<FEN>*) 1){
+				direcoes = {Norte};
+				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2);
+				direcoes.pop_back();
+			}
 		
 		case WhitePawn:
-			if(movimento_permitido(Norte, Mover, tabuleiro, origem))
-				saida.push_back(mover_direcao(Norte, origem));
-
 			direcoes = {Nordeste, Noroeste};
+			
+			if(controle_lances!= (std::vector<FEN>*)1){
+				if(movimento_permitido(Norte, Mover, tabuleiro, origem))
+					saida.push_back(mover_direcao(Norte, origem));
+				if(controle_lances != NULL){
+					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
+				}
+				else{
+					printf("Nao calcula El Passant\n");
+				}
+			}
+
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
 
-			if(controle_lances != NULL){
-				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
-			}
-			else{
-				printf("Nao calcula El Passant\n");
-			}
 			break;
 
 		case BlackStaticKing:
@@ -772,7 +782,7 @@ void desenhar_peca(SDL_Rect& retangulo, char peca){
 			printf("Erro ao desenhar peca: %d\n", peca); exit(1);
     }
 
-	if(nome_peca.compare("Vazio")!=0 && nome_peca.compare("Agua")!=0 && nome_peca.compare("Borda")!=0){
+	if(nome_peca.compare("Vazio")!=0 && nome_peca.compare("Borda")!=0){
 		std::string caminho_completo = caminho + nome_peca + extensao;
 		SDL_Surface* peca_sur = SDL_LoadBMP(caminho_completo.c_str());
 		SDL_Texture* peca_tex = SDL_CreateTextureFromSurface(renderer, peca_sur);
@@ -912,8 +922,8 @@ int main(int argc, char* argv[]) {
 
 	//Variaveis de configuracao
 	int inicio_x=30;
-	int inicio_y=50;
-	int casas_por_linha = 8;
+	int inicio_y=10;
+	int casas_por_linha = 10;
 	int tam_quadrado = 60;
 
 	int final_x = inicio_x + (casas_por_linha)*tam_quadrado;
@@ -921,6 +931,7 @@ int main(int argc, char* argv[]) {
 
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 	
+	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook},
 		{BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn},
@@ -930,6 +941,20 @@ int main(int argc, char* argv[]) {
 		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
 		{WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn},
 		{WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook},
+	};
+	*/
+
+	std::vector<std::vector<char>> pecas_tabuleiro = {
+		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
+		{Agua, BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook, Agua},
+		{Agua, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, Agua},
+		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, Agua},
+		{Agua, WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook, Agua},
+		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 	};
 
 	std::vector<Lance> lances;
@@ -958,14 +983,14 @@ int main(int argc, char* argv[]) {
 					case 'a': inverter_tabuleiro(pecas_tabuleiro, 1); imprimir_tabuleiro(pecas_tabuleiro); break;
 					case 'd': inverter_tabuleiro(pecas_tabuleiro, 2); imprimir_tabuleiro(pecas_tabuleiro); break;
 					case 'l':
-						lances = todos_possiveis_lances(pecas_tabuleiro, Both);
+						lances = todos_possiveis_lances(pecas_tabuleiro, turno);
 						imprimir_lances(lances);
 						limpar_lances(lances);
 						printf("\n");
 						break;
 
 					case 'k':
-						lances = todos_possiveis_lances(pecas_tabuleiro, Both);
+						lances = todos_possiveis_lances(pecas_tabuleiro, turno);
 						if(lances.size()!=0){
 							executar_lance(pecas_tabuleiro, lances[rand()%lances.size()]);
 						}
@@ -1025,7 +1050,7 @@ int main(int argc, char* argv[]) {
 		
 		SDL_RenderPresent(renderer);
 
-		SDL_Delay(100);
+		SDL_Delay(75);
 	}
 
 	//liberar memoria de som.h
