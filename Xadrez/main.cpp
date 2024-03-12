@@ -328,6 +328,32 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 			(origem.first+1 < tamanho && origem.second-2 >= 0) ?
 				saida = true : saida = false; break;
     }
+
+	if(saida && controle_lances!=NULL){
+		Lance futuro_lance = mover_direcao(direcao, origem, num_movimentos);
+		//std::vector<FEN> backup_lance;
+		
+		int turno;
+		!eh_branca ? turno = Black : turno = White;
+
+		executar_lance(tabuleiro, futuro_lance, controle_lances);
+		
+		if(EstaEmCheque(tabuleiro, turno)){
+			for(int p=0; p<10; p++) printf("Entrou no Xeque\n");
+			saida=false;
+		}
+
+		reverter_lance(*controle_lances, tabuleiro, turno);
+		
+		/*
+		if(eh_branca){
+			printf("Branca\n");
+		}
+		else{
+			printf("Preta\n");
+		}
+		*/
+	}
 	
 	if(tipo_lance==EnPassant && saida){
 		return aconteceu_EnPassant(controle_lances, &peca, &origem, direcao);
@@ -521,12 +547,12 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 
 		else if(tipo_lance == Roque){
 			int contador=1;
-			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
+			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador, controle_lances)){
 				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
 				//lances.push_back(mover_direcao(direcoes[i], origem, contador));
 				contador+=1;
 			}
-			if(movimento_permitido(direcoes[i], Roque, tabuleiro, origem, contador)){
+			if(movimento_permitido(direcoes[i], Roque, tabuleiro, origem, contador, controle_lances)){
 				printf("Roque possivel!\n");
 				lances.push_back(mover_direcao(direcoes[i], origem, 2));
 			}
@@ -534,17 +560,17 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 
 		else if(tipo_lance == Linha){
 			int contador=1;
-			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador)){
+			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador, controle_lances)){
 				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
 				lances.push_back(mover_direcao(direcoes[i], origem, contador));
 				contador+=num_movimentos;
 			}
-			if(movimento_permitido(direcoes[i], Capturar, tabuleiro, origem, contador)){
+			if(movimento_permitido(direcoes[i], Capturar, tabuleiro, origem, contador, controle_lances)){
 				lances.push_back(mover_direcao(direcoes[i], origem, contador));
 			}
 		}
 		else{
-			if(movimento_permitido(direcoes[i], tipo_lance, tabuleiro, origem, num_movimentos)){
+			if(movimento_permitido(direcoes[i], tipo_lance, tabuleiro, origem, num_movimentos, controle_lances)){
 				lances.push_back(mover_direcao(direcoes[i], origem, num_movimentos));
 			}
 		}
@@ -559,7 +585,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 		case BlackStaticPawn:
 			if(controle_lances!= (std::vector<FEN>*) 1){
 				direcoes = {Sul};
-				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2);
+				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
 				direcoes.pop_back();
 			}
 
@@ -567,7 +593,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 			direcoes = {Sudeste, Sudoeste};
 
 			if(controle_lances!= (std::vector<FEN>*) 1){
-				if(movimento_permitido(Sul, Mover, tabuleiro, origem))
+				if(movimento_permitido(Sul, Mover, tabuleiro, origem, 1, controle_lances))
 					saida.push_back(mover_direcao(Sul, origem));
 				if(controle_lances != NULL){
 					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
@@ -577,14 +603,14 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 				}
 			}
 
-			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1, controle_lances);
 
 			break;
 
 		case WhiteStaticPawn:
 			if(controle_lances!= (std::vector<FEN>*) 1){
 				direcoes = {Norte};
-				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2);
+				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
 				direcoes.pop_back();
 			}
 		
@@ -592,7 +618,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 			direcoes = {Nordeste, Noroeste};
 			
 			if(controle_lances!= (std::vector<FEN>*)1){
-				if(movimento_permitido(Norte, Mover, tabuleiro, origem))
+				if(movimento_permitido(Norte, Mover, tabuleiro, origem, 1, controle_lances))
 					saida.push_back(mover_direcao(Norte, origem));
 				if(controle_lances != NULL){
 					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
@@ -602,19 +628,19 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 				}
 			}
 
-			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1, controle_lances);
 
 			break;
 
 		case BlackStaticKing:
 		case WhiteStaticKing:
 			direcoes = {Leste, Oeste};
-			sequencia_lances(direcoes, origem, Roque, saida, tabuleiro, 2);
+			sequencia_lances(direcoes, origem, Roque, saida, tabuleiro, 2, controle_lances);
 
 		case BlackKing:
 		case WhiteKing:
 			direcoes = {Norte, Sul, Leste, Oeste, Nordeste, Noroeste, Sudeste, Sudoeste};
-			sequencia_lances(direcoes, origem, MoverCapturar, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, MoverCapturar, saida, tabuleiro, 1, controle_lances);
 			break;
 
 		case BlackStaticRook:
@@ -622,25 +648,25 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 		case BlackRook:
 		case WhiteRook:
 			direcoes = {Norte, Sul, Leste, Oeste};
-			sequencia_lances(direcoes, origem, Linha, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, Linha, saida, tabuleiro, 1, controle_lances);
 			break;
 			
 		case BlackBishop:
 		case WhiteBishop:
 			direcoes = {Nordeste, Noroeste, Sudeste, Sudoeste};
-			sequencia_lances(direcoes, origem, Linha, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, Linha, saida, tabuleiro, 1, controle_lances);
 			break;
 			
 		case BlackQueen:
 		case WhiteQueen:
 			direcoes =  {Norte, Sul, Leste, Oeste, Nordeste, Noroeste, Sudeste, Sudoeste};
-			sequencia_lances(direcoes, origem, Linha, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, Linha, saida, tabuleiro, 1, controle_lances);
 			break;
 
 		case BlackKnight:
 		case WhiteKnight:
 			direcoes = {CimaDireita, CimaEsquerda, BaixoDireita, BaixoEsquerda, DireitaCima, DireitaBaixo, EsquerdaCima, EsquerdaBaixo};
-			sequencia_lances(direcoes, origem, Pulo, saida, tabuleiro, 1);
+			sequencia_lances(direcoes, origem, Pulo, saida, tabuleiro, 1, controle_lances);
 			break;
 	}
 
@@ -649,6 +675,8 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 
 bool alcanca_destino(std::vector<std::vector<char>>& pecas_tabuleiro, std::pair<char, char>& destino, int turno){
 	bool cor_certa=true;
+
+	bool retorno=false;
 
 	for(int i=0; i<pecas_tabuleiro.size(); i++){
 		for(int j=0; j<pecas_tabuleiro[i].size(); j++){
@@ -663,15 +691,15 @@ bool alcanca_destino(std::vector<std::vector<char>>& pecas_tabuleiro, std::pair<
 				std::vector<Lance> possiveis_lances = possiveis_lances_peca({i, j}, pecas_tabuleiro);
 				int total = (int) possiveis_lances.size()-1;
 				for(int k=total; k>=0; k--){
-					if(destino_igual(possiveis_lances[k], destino)){
-						return true;
+					if(!retorno && destino_igual(possiveis_lances[k], destino)){
+						retorno = true;
 					}
 					possiveis_lances.pop_back();
 				}
 			}
 		}
 	}
-	return false;
+	return retorno;
 }
 
 std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<char>>& tabuleiro, int cor, std::vector<FEN>* controle_lances){
@@ -1093,6 +1121,10 @@ int main(int argc, char* argv[]) {
 					case 'o': sentido_brancas = !sentido_brancas; inverter = !inverter; break;
 					case 'z': reverter_lance(controle_lances, pecas_tabuleiro, turno); break;
 					case 'x': mostrar_FEN(controle_lances); break;
+					case ']': 
+						do{
+							SDL_PollEvent(&evento);
+						} while(evento.type != SDL_KEYDOWN);
 				}
 			}
 
