@@ -22,7 +22,7 @@ enum Cor{
 };
 
 enum Pecas{
-	Vazio, Agua, Borda,
+	Vazio=-2, Borda, Agua,
 	BlackPawn, BlackStaticPawn, BlackKnight, BlackBishop, BlackRook, BlackStaticRook, BlackQueen, BlackStaticKing, BlackKing,
 	WhitePawn, WhiteStaticPawn, WhiteKnight, WhiteBishop, WhiteRook, WhiteStaticRook, WhiteQueen, WhiteStaticKing, WhiteKing
 };
@@ -53,10 +53,16 @@ void highlight_proximo_lance(SDL_Rect posicao, bool capturar);
 void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro, bool inverter);	
 void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno);
 void mostrar_FEN(std::vector<FEN>& controle_lances);
+
 void desenhar_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro, bool padrao);
 void mostrar_posicoes_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro);
 void mostrar_pecas_tabuleiro(std::vector<std::vector<char>>& pecas_tabuleiro);
-void desenhar_peca(SDL_Rect& retangulo, char peca);
+
+SDL_Texture* desenhar_peca(char peca);
+void iniciar_imagens(std::vector<SDL_Texture*>& imagens);
+void carregar_imagens(std::vector<SDL_Texture*>& imagens, SDL_Rect& posicao, char peca);
+void destruir_imagens(std::vector<SDL_Texture*>& imagens);
+
 void swap(auto* a, auto* b);
 void inverter_tabuleiro(std::vector<std::vector<char>>& tabuleiro, int eixo);
 void imprimir_tabuleiro(std::vector<std::vector<char>>& tabuleiro);

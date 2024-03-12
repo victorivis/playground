@@ -749,7 +749,7 @@ void mostrar_pecas_tabuleiro(std::vector<std::vector<char>>& pecas_tabuleiro){
 	}
 }
 
-void desenhar_peca(SDL_Rect& retangulo, char peca){
+SDL_Texture* desenhar_peca(char peca){
     std::string caminho = "assets/pecasBMP/";
     std::string extensao = ".bmp";
     std::string nome_peca;
@@ -786,9 +786,34 @@ void desenhar_peca(SDL_Rect& retangulo, char peca){
 		std::string caminho_completo = caminho + nome_peca + extensao;
 		SDL_Surface* peca_sur = SDL_LoadBMP(caminho_completo.c_str());
 		SDL_Texture* peca_tex = SDL_CreateTextureFromSurface(renderer, peca_sur);
-		SDL_RenderCopy(renderer, peca_tex, NULL, &retangulo);
+		//SDL_RenderCopy(renderer, peca_tex, NULL, &retangulo);
 
 		SDL_FreeSurface(peca_sur);
+		//SDL_DestroyTexture(peca_tex);
+		return peca_tex;
+	}
+	else{
+		return nullptr;
+	}
+}
+
+void iniciar_imagens(std::vector<SDL_Texture*>& imagens){
+	for(char i=Agua; i<=WhiteKing; i++){
+		imagens.push_back(desenhar_peca(i));
+	}
+}
+
+void carregar_imagens(std::vector<SDL_Texture*>& imagens, SDL_Rect& posicao, char peca){
+	if(peca>=0 && peca<imagens.size()){
+		SDL_RenderCopy(renderer, imagens[peca], NULL, &posicao);
+	}
+}
+
+void destruir_imagens(std::vector<SDL_Texture*>& imagens){
+	int total = (int) imagens.size()-1;
+	for(int i=total; i>=0; i--){
+		SDL_DestroyTexture(imagens[i]);
+		imagens.pop_back();
 	}
 }
 
@@ -960,12 +985,14 @@ int main(int argc, char* argv[]) {
 	std::vector<Lance> lances;
 	std::vector<Lance> lances_clicado;
 	std::vector<FEN> controle_lances;
+	std::vector<SDL_Texture*> imagens;
 
 	SDL_Event evento;
 	int rodar=1;
 	int turno = White;
 	bool sentido_brancas=true;
 	bool inverter=false;
+	iniciar_imagens(imagens);
 
 	//Execucao do jogo
 	while(rodar){
@@ -1032,14 +1059,14 @@ int main(int argc, char* argv[]) {
 		if(sentido_brancas){
 			for(int i=0; i<pecas_tabuleiro.size(); i++){
 				for(int j=0; j<pecas_tabuleiro[i].size(); j++){
-					desenhar_peca(tabuleiro[i][j], pecas_tabuleiro[i][j]);
+					carregar_imagens(imagens, tabuleiro[i][j], pecas_tabuleiro[i][j]);
 				}
 			}
 		}
 		else{
 			for(int i=0; i<pecas_tabuleiro.size(); i++){
 				for(int j=0; j<pecas_tabuleiro[i].size(); j++){
-					desenhar_peca(tabuleiro[i][j], pecas_tabuleiro[(int) pecas_tabuleiro[i].size()-1-i][j]);
+					carregar_imagens(imagens, tabuleiro[i][j], pecas_tabuleiro[(int) pecas_tabuleiro[i].size()-1-i][j]);
 				}
 			}
 		}
@@ -1052,6 +1079,7 @@ int main(int argc, char* argv[]) {
 
 		SDL_Delay(75);
 	}
+	destruir_imagens(imagens);
 
 	//liberar memoria de som.h
 	//

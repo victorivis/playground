@@ -82,6 +82,11 @@ int main(int argc, char* argv[]) {
 
 		SDL_Delay(5);
 	}
+	int total = (int) conjunto_imagens.size()-1;
+	for(int i=total; i>=0; i--){
+		SDL_DestroyTexture(conjunto_imagens[i]);
+		conjunto_imagens.pop_back();
+	}
 
 	return 0;
 }

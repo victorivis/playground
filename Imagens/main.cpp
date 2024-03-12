@@ -64,6 +64,7 @@ int main(int argc, char* argv[]) {
 
 		SDL_Delay(5);
 	}
+	SDL_DestroyTexture(lettuce_tex);
 
 	return 0;
 }
