@@ -6,6 +6,11 @@
 
 #define branco(peca) (peca>=WhitePawn && peca<=WhiteKing)
 #define preto(peca) (peca>=BlackPawn && peca<=BlackKing)
+#define rei_preto(peca) (peca==BlackKing || peca==BlackStaticKing)
+#define rei_branco(peca) (peca==WhiteKing || peca==WhiteStaticKing)
+#define origem_igual(lance, par) (lance.src_i == par.first && lance.src_j == par.second)
+#define destino_igual(lance, par) (lance.dst_i == par.first && lance.dst_j == par.second)
+#define par_igual(par1, par2) (par1.first == par2.first && par1.second == par2.second)
 
 const int WIDTH = 1080, HEIGHT = 620;
 
@@ -208,6 +213,37 @@ bool aconteceu_EnPassant(std::vector<FEN>* controle_lances, char* peca, std::pai
 		}
 	}
 	return false;
+}
+
+bool EstaEmCheque(std::vector<std::vector<char>>& pecas_tabuleiro, int turno){
+	int turno_oposto;
+	if(turno == Black) turno_oposto = White;
+	else if(turno == White) turno_oposto = Black;
+
+	std::pair<char, char> posicao_rei;
+
+	//Encontrar posicao rei
+	for(int i=0; i<pecas_tabuleiro.size(); i++){
+		for(int j=0; j<pecas_tabuleiro.size(); j++){
+			if(turno == Black){
+				if(rei_preto(pecas_tabuleiro[i][j])){
+					posicao_rei.first = i;
+					posicao_rei.second = j;
+					goto fora;
+				}
+			}
+			else if(turno == White){
+				if(rei_branco(pecas_tabuleiro[i][j])){
+					posicao_rei.first = i;
+					posicao_rei.second = j;
+					goto fora;
+				}
+			}
+		}
+	}
+	fora:
+
+	return alcanca_destino(pecas_tabuleiro, posicao_rei, turno_oposto);
 }
 
 //Refatorar esse codigo
@@ -537,7 +573,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
 				}
 				else{
-					printf("Nao calcula El Passant\n");
+					//printf("Nao calcula El Passant\n");
 				}
 			}
 
@@ -609,6 +645,33 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 	}
 
 	return saida;
+}
+
+bool alcanca_destino(std::vector<std::vector<char>>& pecas_tabuleiro, std::pair<char, char>& destino, int turno){
+	bool cor_certa=true;
+
+	for(int i=0; i<pecas_tabuleiro.size(); i++){
+		for(int j=0; j<pecas_tabuleiro[i].size(); j++){
+			if(turno == Black){
+				cor_certa = preto(pecas_tabuleiro[i][j]);
+			}
+			else if(turno == White){
+				cor_certa = branco(pecas_tabuleiro[i][j]);
+			}
+			
+			if(cor_certa){
+				std::vector<Lance> possiveis_lances = possiveis_lances_peca({i, j}, pecas_tabuleiro);
+				int total = (int) possiveis_lances.size()-1;
+				for(int k=total; k>=0; k--){
+					if(destino_igual(possiveis_lances[k], destino)){
+						return true;
+					}
+					possiveis_lances.pop_back();
+				}
+			}
+		}
+	}
+	return false;
 }
 
 std::vector<Lance> todos_possiveis_lances(std::vector<std::vector<char>>& tabuleiro, int cor, std::vector<FEN>* controle_lances){
@@ -1074,10 +1137,14 @@ int main(int argc, char* argv[]) {
 		if(lances_clicado.size()!=0){
 			highlight_possiveis_lances(lances_clicado, pecas_tabuleiro, tabuleiro, inverter);
 		}
+
+		if(EstaEmCheque(pecas_tabuleiro, turno)){
+			for(int i=0; i<10; i++) printf("Cheque\n");
+		}
 		
 		SDL_RenderPresent(renderer);
 
-		SDL_Delay(75);
+		SDL_Delay(120);
 	}
 	destruir_imagens(imagens);
 
