@@ -18,7 +18,7 @@ struct FEN{
 };
 
 enum Cor{
-	Black, White, Both
+	Black, White, Both, Neither
 };
 
 enum Pecas{

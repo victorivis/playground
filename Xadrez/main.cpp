@@ -12,7 +12,7 @@
 #define destino_igual(lance, par) (lance.dst_i == par.first && lance.dst_j == par.second)
 #define par_igual(par1, par2) (par1.first == par2.first && par1.second == par2.second)
 
-const int WIDTH = 1080, HEIGHT = 620;
+const int WIDTH = 1080, HEIGHT = 600;
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
@@ -328,32 +328,6 @@ bool movimento_permitido(int direcao, int tipo_lance, std::vector<std::vector<ch
 			(origem.first+1 < tamanho && origem.second-2 >= 0) ?
 				saida = true : saida = false; break;
     }
-
-	if(saida && controle_lances!=NULL){
-		Lance futuro_lance = mover_direcao(direcao, origem, num_movimentos);
-		//std::vector<FEN> backup_lance;
-		
-		int turno;
-		!eh_branca ? turno = Black : turno = White;
-
-		executar_lance(tabuleiro, futuro_lance, controle_lances);
-		
-		if(EstaEmCheque(tabuleiro, turno)){
-			for(int p=0; p<10; p++) printf("Entrou no Xeque\n");
-			saida=false;
-		}
-
-		reverter_lance(*controle_lances, tabuleiro, turno);
-		
-		/*
-		if(eh_branca){
-			printf("Branca\n");
-		}
-		else{
-			printf("Preta\n");
-		}
-		*/
-	}
 	
 	if(tipo_lance==EnPassant && saida){
 		return aconteceu_EnPassant(controle_lances, &peca, &origem, direcao);
@@ -534,8 +508,9 @@ Lance mover_direcao(int direcao, std::pair<char, char> origem, int num_movimento
 }
 
 void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem, int tipo_lance, std::vector<Lance>& lances, std::vector<std::vector<char>>& tabuleiro, int num_movimentos, std::vector<FEN>* controle_lances){
+	int tamanho=(int) lances.size();
+	
 	for(int i=0; i<direcoes.size(); i++){
-		
 		if(tipo_lance == EnPassant){
 			int contador=1;
 			if(movimento_permitido(direcoes[i], EnPassant, tabuleiro, origem, contador, controle_lances)){
@@ -575,6 +550,35 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 			}
 		}
 	}
+
+	int turno;
+	if(branco(tabuleiro[origem.first][origem.second])){
+		turno = White;
+	}
+	else if(preto(tabuleiro[origem.first][origem.second])){
+		turno = Black;
+	}
+	else{
+		turno = Neither;
+	}
+
+	int retirados=0;
+	if(controle_lances != NULL && turno!=Neither){
+		int backup_turno = turno;
+		for(int i=tamanho; i<lances.size(); i++){
+			printf("Turno: %d\n");
+			executar_lance(tabuleiro, lances[i], controle_lances);
+			
+			if(EstaEmCheque(tabuleiro, turno)){
+				for(int p=0; p<10; p++) printf("Entrou no Xeque\n");
+				lances.erase(lances.begin()+i);
+				i--;
+			}
+
+			reverter_lance(*controle_lances, tabuleiro, turno);
+			turno = backup_turno;
+		}
+	}
 }
 
 std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vector<std::vector<char>>& tabuleiro, std::vector<FEN>* controle_lances){
@@ -583,24 +587,17 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 
 	switch(tabuleiro[origem.first][origem.second]){
 		case BlackStaticPawn:
-			if(controle_lances!= (std::vector<FEN>*) 1){
-				direcoes = {Sul};
-				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
-				direcoes.pop_back();
-			}
+			direcoes = {Sul};
+			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
+			direcoes.pop_back();
 
         case BlackPawn:
-			direcoes = {Sudeste, Sudoeste};
+			direcoes={Sul};
+			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 1, controle_lances);
 
-			if(controle_lances!= (std::vector<FEN>*) 1){
-				if(movimento_permitido(Sul, Mover, tabuleiro, origem, 1, controle_lances))
-					saida.push_back(mover_direcao(Sul, origem));
-				if(controle_lances != NULL){
-					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
-				}
-				else{
-					//printf("Nao calcula El Passant\n");
-				}
+			direcoes = {Sudeste, Sudoeste};
+			if(controle_lances != NULL){
+				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
 			}
 
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1, controle_lances);
@@ -608,24 +605,17 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 			break;
 
 		case WhiteStaticPawn:
-			if(controle_lances!= (std::vector<FEN>*) 1){
-				direcoes = {Norte};
-				sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
-				direcoes.pop_back();
-			}
+			direcoes = {Norte};
+			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
+			direcoes.pop_back();
 		
 		case WhitePawn:
+			direcoes = {Norte};
+			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 1, controle_lances);
+
 			direcoes = {Nordeste, Noroeste};
-			
-			if(controle_lances!= (std::vector<FEN>*)1){
-				if(movimento_permitido(Norte, Mover, tabuleiro, origem, 1, controle_lances))
-					saida.push_back(mover_direcao(Norte, origem));
-				if(controle_lances != NULL){
-					sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
-				}
-				else{
-					printf("Nao calcula El Passant\n");
-				}
+			if(controle_lances != NULL){
+				sequencia_lances(direcoes, origem, EnPassant, saida, tabuleiro, 1, controle_lances);
 			}
 
 			sequencia_lances(direcoes, origem, Capturar, saida, tabuleiro, 1, controle_lances);
@@ -1039,7 +1029,7 @@ int main(int argc, char* argv[]) {
 	//Variaveis de configuracao
 	int inicio_x=30;
 	int inicio_y=10;
-	int casas_por_linha = 10;
+	int casas_por_linha = 8;
 	int tam_quadrado = 60;
 
 	int final_x = inicio_x + (casas_por_linha)*tam_quadrado;
@@ -1060,6 +1050,7 @@ int main(int argc, char* argv[]) {
 	};
 	*/
 
+	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 		{Agua, BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook, Agua},
@@ -1072,6 +1063,32 @@ int main(int argc, char* argv[]) {
 		{Agua, WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook, Agua},
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 	};
+	*/
+
+	/*
+	std::vector<std::vector<char>> pecas_tabuleiro = {
+		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
+		{Agua, BlackQueen, BlackQueen, Vazio, Vazio, BlackStaticKing, BlackQueen, BlackQueen, Vazio, Agua},
+		{Agua, BlackStaticPawn, Vazio, Vazio, Vazio, BlackQueen, BlackStaticPawn, Vazio, BlackStaticPawn, Agua},
+		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, Vazio, BlackPawn, Vazio, Vazio, Vazio, Vazio, BlackPawn, Vazio, Agua},
+		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, BlackQueen, Vazio, Agua},
+		{Agua, Vazio, Vazio, WhitePawn, WhiteBishop, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, WhiteStaticPawn, WhiteStaticPawn, Vazio, WhiteBishop, WhiteKnight, Vazio, Vazio, Vazio, Agua},
+		{Agua, WhiteStaticRook, Vazio, Vazio, WhiteKing, Vazio, Vazio, Vazio, Vazio, Agua},
+		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
+	};
+	*/
+	std::vector<std::vector<char>> pecas_tabuleiro = {
+		{BlackQueen, BlackQueen, Vazio, Vazio, BlackStaticKing, BlackQueen, BlackQueen, Vazio},
+		{BlackStaticPawn, Vazio, Vazio, Vazio, BlackQueen, BlackStaticPawn, Vazio, BlackStaticPawn},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{Vazio, BlackPawn, Vazio, Vazio, Vazio, Vazio, BlackPawn, Vazio},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, BlackQueen, Vazio},
+		{Vazio, Vazio, WhitePawn, WhiteBishop, Vazio, Vazio, Vazio, Vazio},
+		{WhiteStaticPawn, WhiteStaticPawn, Vazio, WhiteBishop, WhiteKnight, Vazio, Vazio, Vazio},
+		{WhiteStaticRook, Vazio, Vazio, WhiteKing, Vazio, Vazio, Vazio, Vazio},
+	};
 
 	std::vector<Lance> lances;
 	std::vector<Lance> lances_clicado;
@@ -1080,7 +1097,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_Event evento;
 	int rodar=1;
-	int turno = White;
+	int turno = Black;
 	bool sentido_brancas=true;
 	bool inverter=false;
 	iniciar_imagens(imagens);
