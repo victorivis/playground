@@ -533,8 +533,19 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 			}
 		}
 
-		else if(tipo_lance == Linha){
+		else if(tipo_lance == FinalLinha){
 			int contador=1;
+			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador, controle_lances)){
+				contador+=1;
+				if(contador==num_movimentos) break;
+			}
+			if(contador==num_movimentos && movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador, controle_lances)){
+				lances.push_back(mover_direcao(direcoes[i], origem, contador));
+			}
+		}
+
+		else if(tipo_lance == Linha){
+			int contador=num_movimentos;
 			while(movimento_permitido(direcoes[i], Mover, tabuleiro, origem, contador, controle_lances)){
 				//printf("Origem: {%d %d}, contador: %d\n", origem.first, origem.second, contador);
 				lances.push_back(mover_direcao(direcoes[i], origem, contador));
@@ -588,7 +599,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 	switch(tabuleiro[origem.first][origem.second]){
 		case BlackStaticPawn:
 			direcoes = {Sul};
-			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
+			sequencia_lances(direcoes, origem, FinalLinha, saida, tabuleiro, 2, controle_lances);
 			direcoes.pop_back();
 
         case BlackPawn:
@@ -606,7 +617,7 @@ std::vector<Lance> possiveis_lances_peca(std::pair<char, char> origem, std::vect
 
 		case WhiteStaticPawn:
 			direcoes = {Norte};
-			sequencia_lances(direcoes, origem, Mover, saida, tabuleiro, 2, controle_lances);
+			sequencia_lances(direcoes, origem, FinalLinha, saida, tabuleiro, 2, controle_lances);
 			direcoes.pop_back();
 		
 		case WhitePawn:

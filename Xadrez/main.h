@@ -33,7 +33,7 @@ enum Direcao{
 };
 
 enum Movimento{
-	Linha=20, Pulo, Capturar, Mover, MoverCapturar, Seguro, Roque, EnPassant
+	Linha=20, FinalLinha, Pulo, Capturar, Mover, MoverCapturar, Seguro, Roque, EnPassant
 };
 
 enum Clique{
