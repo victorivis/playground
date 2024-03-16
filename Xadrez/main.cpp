@@ -566,8 +566,8 @@ void sequencia_lances(std::vector<char>& direcoes, std::pair<char, char> origem,
 	if(controle_lances != NULL && turno!=Neither){
 		int backup_turno = turno;
 		for(int i=tamanho; i<lances.size(); i++){
-			printf("Turno: %d\n");
-			executar_lance(tabuleiro, lances[i], controle_lances);
+			Lance copia_lance = lances[i];
+			executar_lance(tabuleiro, copia_lance, controle_lances);
 			
 			if(EstaEmCheque(tabuleiro, turno)){
 				for(int p=0; p<10; p++) printf("Entrou no Xeque\n");
@@ -942,7 +942,7 @@ void imprimir_lances(std::vector<Lance>& lances){
 	for(int i=0; i<total_lances; i++){
 		printf("Origem: %d %d Destino: %d %d\n", lances[i].src_i, lances[i].src_j, lances[i].dst_i, lances[i].dst_j);
 	}
-	printf("Total lances: %d\n\n", total_lances);
+	printf("Total de lances possiveis: %d\n\n", total_lances);
 }
 
 void limpar_lances(std::vector<Lance>& lances){
@@ -984,7 +984,6 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 		printf("total lances_clicado: %d\n", (int) lances_clicado.size());
 		bool executado=false;
 		for(int contador=0; contador<lances_clicado.size(); contador++){
-			printf("%d == %d && %d == %d\n",lances_clicado[contador].dst_i, i, lances_clicado[contador].dst_j, j);
 			if(lances_clicado[contador].dst_i == i && lances_clicado[contador].dst_j == j){
 				printf("Execuntando lance\n");
 				executado = true;
@@ -996,6 +995,10 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 				executar_lance(pecas_tabuleiro, lances_clicado[contador], &controle_lances);
 				if(turno==White) turno=Black;
 				else if(turno==Black) turno=White;
+
+				if(EstaEmCheque(pecas_tabuleiro, turno)){
+					printf("Cheque\n");
+				}
 				break;
 			}
 		}
@@ -1037,7 +1040,6 @@ int main(int argc, char* argv[]) {
 
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 	
-	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook},
 		{BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn},
@@ -1048,7 +1050,6 @@ int main(int argc, char* argv[]) {
 		{WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn},
 		{WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook},
 	};
-	*/
 
 	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
@@ -1079,6 +1080,8 @@ int main(int argc, char* argv[]) {
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 	};
 	*/
+	/*
+	//Jogo com Sofia
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{BlackQueen, BlackQueen, Vazio, Vazio, BlackStaticKing, BlackQueen, BlackQueen, Vazio},
 		{BlackStaticPawn, Vazio, Vazio, Vazio, BlackQueen, BlackStaticPawn, Vazio, BlackStaticPawn},
@@ -1089,6 +1092,7 @@ int main(int argc, char* argv[]) {
 		{WhiteStaticPawn, WhiteStaticPawn, Vazio, WhiteBishop, WhiteKnight, Vazio, Vazio, Vazio},
 		{WhiteStaticRook, Vazio, Vazio, WhiteKing, Vazio, Vazio, Vazio, Vazio},
 	};
+	*/
 
 	std::vector<Lance> lances;
 	std::vector<Lance> lances_clicado;
@@ -1097,7 +1101,7 @@ int main(int argc, char* argv[]) {
 
 	SDL_Event evento;
 	int rodar=1;
-	int turno = Black;
+	int turno = White;
 	bool sentido_brancas=true;
 	bool inverter=false;
 	iniciar_imagens(imagens);
@@ -1118,17 +1122,19 @@ int main(int argc, char* argv[]) {
 					case 'a': inverter_tabuleiro(pecas_tabuleiro, 1); imprimir_tabuleiro(pecas_tabuleiro); break;
 					case 'd': inverter_tabuleiro(pecas_tabuleiro, 2); imprimir_tabuleiro(pecas_tabuleiro); break;
 					case 'l':
-						lances = todos_possiveis_lances(pecas_tabuleiro, turno);
+						lances = todos_possiveis_lances(pecas_tabuleiro, turno, &controle_lances);
 						imprimir_lances(lances);
 						limpar_lances(lances);
 						printf("\n");
 						break;
 
 					case 'k':
-						lances = todos_possiveis_lances(pecas_tabuleiro, turno);
+						lances = todos_possiveis_lances(pecas_tabuleiro, turno, &controle_lances);
 						if(lances.size()!=0){
-							executar_lance(pecas_tabuleiro, lances[rand()%lances.size()]);
+							executar_lance(pecas_tabuleiro, lances[rand()%lances.size()], &controle_lances);
 						}
+						if(turno == White) turno = Black;
+						else if(turno == Black) turno = White;
 						imprimir_lances(lances);
 						limpar_lances(lances);
 						printf("\n");
@@ -1185,10 +1191,6 @@ int main(int argc, char* argv[]) {
 
 		if(lances_clicado.size()!=0){
 			highlight_possiveis_lances(lances_clicado, pecas_tabuleiro, tabuleiro, inverter);
-		}
-
-		if(EstaEmCheque(pecas_tabuleiro, turno)){
-			for(int i=0; i<10; i++) printf("Cheque\n");
 		}
 		
 		SDL_RenderPresent(renderer);

@@ -3,7 +3,7 @@ WFLAGS = -std=c++20 -Wno-narrowing -I ..\..\SDL2\x86_64-w64-mingw32\include\ -L 
 
 run: main
 	./saida.out
-	#rm saida.out
+	rm saida.out
 
 main: main.cpp
 	g++ main.cpp $(FLAGS) -o saida.out
@@ -12,5 +12,6 @@ wincpp: main.cpp
 	g++ .\main.cpp $(WFLAGS) -o main.exe
 
 winrun: wincpp
-	.\main.exe 
+	.\main.exe
+	del main.exe
 
