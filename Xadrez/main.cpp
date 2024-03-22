@@ -1209,7 +1209,11 @@ int main(int argc, char* argv[]) {
 		SDL_Delay(120);
 	}
 	destruir_imagens(imagens);
-
+	
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+	
 	//liberar memoria de som.h
 	//
 	//quitMixer();
