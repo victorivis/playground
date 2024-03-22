@@ -82,11 +82,18 @@ int main(int argc, char* argv[]) {
 
 		SDL_Delay(5);
 	}
+	
+	//Liberando texturas
 	int total = (int) conjunto_imagens.size()-1;
 	for(int i=total; i>=0; i--){
 		SDL_DestroyTexture(conjunto_imagens[i]);
 		conjunto_imagens.pop_back();
 	}
+	
+	//Liberando memoria e subsistemas
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
 	return 0;
 }

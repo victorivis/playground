@@ -83,6 +83,12 @@ int main(int argc, char* argv[]) {
 
 		SDL_Delay(50);
 	}
+	
+	//Liberando memoria
+	SDL_DestroyTexture(textura);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
 	return 0;
 }
