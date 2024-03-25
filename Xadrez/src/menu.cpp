@@ -1,22 +1,12 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <iostream>
-#include <string>
-#include <vector>
+#include "menu.h"
 
-enum Operacao{
-    Continuar, Sair
-};
-
-SDL_Renderer* renderer = NULL;
-
-int rodar_menu(){
+int rodar_menu_pausa(SDL_Renderer*& renderer, int width){
     //Inicializando bibliotecas SDL_ttf
     TTF_Init();
 
     //Criando variaveis do menu
     int retorno;
-    TTF_Font* fonte = TTF_OpenFont("Sans.ttf", 64);
+    TTF_Font* fonte = TTF_OpenFont("assets/TrueType/Sans.ttf", 64);
     const int NUMMENU=2;
     const char rotulo[NUMMENU][15] = {"Continuar", "Sair"};
 
@@ -33,9 +23,12 @@ int rodar_menu(){
         textura[i] = SDL_CreateTextureFromSurface(renderer, molde[i]);
     }
 
-    SDL_Rect pos_inicial={0, 0, 100, 100};
+    SDL_Rect pos_inicial={width/2, 50, 100, 100};
     SDL_Rect posicao[NUMMENU];
     for(int i=0; i<NUMMENU; i++){
+        SDL_QueryTexture(textura[i], NULL, NULL, &pos_inicial.w, &pos_inicial.h);
+        pos_inicial.x = width/2-pos_inicial.w/2;
+
         posicao[i]=pos_inicial;
         pos_inicial.y += pos_inicial.h;
     }
@@ -122,60 +115,3 @@ int rodar_menu(){
     
     return retorno;
 }	
-
-const int WIDTH = 1080, HEIGHT = 600;
-
-int main(int argc, char* argv[]) {
-    //Inicializando subsistemas
-    SDL_Init(SDL_INIT_VIDEO);
-
-    //Criando Janela
-    SDL_Window* window = NULL;
-
-	window = SDL_CreateWindow("Um simples menu (aperte esc)",
-                              SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
-							  WIDTH, HEIGHT, 0);
-	renderer = SDL_CreateRenderer(window, -1, 0);
-
-	//Variaveis de Controle
-	SDL_Event evento;
-	int rodar=1;
-	
-	//Executar jogo
-	while(rodar){
-		while(SDL_PollEvent(&evento)){
-			if(evento.type == SDL_QUIT) rodar=0;
-
-			else if(evento.type == SDL_KEYDOWN){
-				switch(evento.key.keysym.sym){
-					case SDLK_ESCAPE:
-                        int retorno = rodar_menu();
-
-                        if(retorno==Sair){
-                            rodar=0;
-                        }
-						break;
-				}
-			}
-		}
-		int retorno = rodar_menu();
-		if(retorno==Sair){
-			rodar=0;
-		}
-
-		//Carregar plano de fundo
-		SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
-		SDL_RenderClear(renderer);
-
-		SDL_RenderPresent(renderer);
-
-		SDL_Delay(120);
-	}
-
-    //Liberando memoria
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
-	SDL_Quit();
-	
-	return 0;
-}

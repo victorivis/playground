@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
 	initMixer();
-	int sound = loadSound("assets/sound.wav");
+	int sound = loadSound("assets/song.mp3");
 	int song = loadMusic("assets/zero.mp3");
 	playMusic(song);
 	

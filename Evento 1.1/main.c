@@ -111,6 +111,11 @@ int main(int argc, char* argv[]) {
 		
 		if(loop_reset) SDL_Delay(50);
 	}
+	
+	//Liberando memoria e subsistemas
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
 
 	return 0;
 }

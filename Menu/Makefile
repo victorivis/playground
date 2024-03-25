@@ -1,4 +1,5 @@
 WFLAGS = -I ..\..\SDL2\x86_64-w64-mingw32\include\ -L ..\..\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2 -lSDL2_ttf
+DEBUG = -static-libgcc -static-libstdc++ -ggdb
 
 run: main
 	@./a.out
@@ -6,6 +7,9 @@ run: main
 
 main: main.cpp
 	g++ main.cpp $(shell pkg-config --cflags --libs sdl2)
+
+debug: main.cpp
+	g++ -std=c++20 $(DEBUG) main.cpp $(WFLAGS) -o main.exe
 
 wincpp:
 	g++ -std=c++20 main.cpp $(WFLAGS) -o main.exe

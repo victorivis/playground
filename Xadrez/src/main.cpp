@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdio>
 #include "pecas.h"
+#include "menu.h"
 #include "main.h"
 
 const int WIDTH = 1080, HEIGHT = 640;
@@ -366,7 +367,10 @@ int main(int argc, char* argv[]) {
 			else if(evento.type == SDL_KEYDOWN){
 				switch(evento.key.keysym.sym){
 					case SDLK_ESCAPE:
-						rodar=0;
+						//rodar=0;
+						if(rodar_menu_pausa(renderer, WIDTH)==Sair){
+							rodar=0;
+						}
 						break;
 					//case 'q': playSound(sound);	break;
 					case 'w': inverter_tabuleiro(pecas_tabuleiro, 3); imprimir_tabuleiro(pecas_tabuleiro); break;
