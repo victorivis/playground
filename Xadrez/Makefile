@@ -5,11 +5,15 @@ run: main
 	./saida.out
 	rm saida.out
 
-main: main.cpp
-	g++ main.cpp $(FLAGS) -o saida.out
+main.o: main.cpp
+	g++ main.cpp $(WFLAGS) -c -o main.o
 
-wincpp: main.cpp
-	g++ .\main.cpp $(WFLAGS) -o main.exe
+pecas.o: pecas.cpp
+	g++ pecas.cpp $(WFLAGS) -c -o pecas.o
+
+wincpp: pecas.o main.o
+	g++ .\main.o .\pecas.o $(WFLAGS) -o main.exe
+	del *.o
 
 winrun: wincpp
 	.\main.exe
