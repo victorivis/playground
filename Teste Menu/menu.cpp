@@ -1,9 +1,5 @@
 #include "menu.h"
 
-const char font_path[]="assets/TrueType/Sans.ttf";
-const int font_size=50;
-
-
 int rodar_menu_pausa(SDL_Renderer*& renderer, int width){
     //Inicializando bibliotecas SDL_ttf
     TTF_Init();
@@ -258,7 +254,6 @@ void Menu::inicializar(SDL_Renderer** renderer, std::vector<std::string>& nomes_
 
         posicao.push_back(pos_inicial);
         pos_inicial.y += pos_inicial.h;
-        selecionado.push_back(false);
     }
 }
 
@@ -272,8 +267,6 @@ void Menu::finalizar(){
         molde.pop_back();
         textura.pop_back();
         rotulo.pop_back();
-        posicao.pop_back();
-        selecionado.pop_back();
     }
     //Liberando os subsistemas de SDL_ttf
     TTF_Quit();
@@ -333,7 +326,7 @@ int Menu::menu_generico(SDL_Renderer** renderer, std::vector<std::string> nomes_
                 }
             }
             else if(evento_menu.type == SDL_MOUSEBUTTONDOWN){
-                for(int i=0; i<rotulo.size(); i++){
+                for(int i=0; i<NUMMENU; i++){
                     if(selecionado[i]){
                         retorno = i;
                         rodar_menu=false;
@@ -357,22 +350,4 @@ int Menu::menu_generico(SDL_Renderer** renderer, std::vector<std::string> nomes_
 
     return retorno;
     //finalizar();
-}
-
-void Menu::menu_principal(SDL_Renderer** renderer, bool* rodar_jogo){
-    switch(menu_generico(renderer, {"Jogo Classico", "Editor Tabuleiro (nao funciona ainda)", "Sair"}, font_path, font_size)){
-        case 2:
-            *rodar_jogo=false;
-    }
-}
-
-int Menu::menu_pausa(SDL_Renderer** renderer, bool* rodar_jogo){
-    switch(menu_generico(renderer, {"Continuar", "Menu Principal", "Sair"}, font_path, font_size)){
-        case 1:
-            return 1;
-        case 2:
-            *rodar_jogo=false;
-    }
-
-    return 0;
 }

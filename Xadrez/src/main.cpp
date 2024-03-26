@@ -274,7 +274,7 @@ int main(int argc, char* argv[]) {
                               SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 
 							  WIDTH, HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, -1, 0);
-	
+
 	//iniciar biblioteca som.h
 	//
 	//initMixer();
@@ -283,6 +283,7 @@ int main(int argc, char* argv[]) {
 	//setVolume(30);
 
 	//Variaveis de configuracao
+	Menu myMenu = Menu(WIDTH, HEIGHT);
 	int inicio_x=30;
 	int inicio_y=20;
 	int casas_por_linha = 10;
@@ -314,7 +315,7 @@ int main(int argc, char* argv[]) {
 		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
 		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
 		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
-		{Agua, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, Agua},
+		{Agua, WhiteStaticPawn, Vazio, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, Agua},
 		{Agua, WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook, Agua},
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 	};
@@ -353,11 +354,15 @@ int main(int argc, char* argv[]) {
 	std::vector<SDL_Texture*> imagens;
 
 	SDL_Event evento;
-	int rodar=1;
+	bool rodar=true;
 	int turno = White;
 	bool sentido_brancas=true;
 	bool inverter=false;
 	iniciar_imagens(imagens);
+
+	//Carrega a tela de inicio
+	menu_principal:
+	myMenu.menu_principal(&renderer, &rodar);
 
 	//Execucao do jogo
 	while(rodar){
@@ -367,10 +372,7 @@ int main(int argc, char* argv[]) {
 			else if(evento.type == SDL_KEYDOWN){
 				switch(evento.key.keysym.sym){
 					case SDLK_ESCAPE:
-						//rodar=0;
-						if(rodar_menu_pausa(renderer, WIDTH)==Sair){
-							rodar=0;
-						}
+						if(myMenu.menu_pausa(&renderer, &rodar)) goto menu_principal;
 						break;
 					//case 'q': playSound(sound);	break;
 					case 'w': inverter_tabuleiro(pecas_tabuleiro, 3); imprimir_tabuleiro(pecas_tabuleiro); break;

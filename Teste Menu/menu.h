@@ -16,10 +16,11 @@ class Menu{
     public:
         int width;
         int height;
+        int NUMMENU;
         int retorno;
         TTF_Font* fonte;
         
-        std::vector<bool> selecionado;
+        bool selecionado[10];
         std::vector<std::string> rotulo;
         std::vector<SDL_Surface*> molde;
         std::vector<SDL_Texture*> textura;
@@ -35,6 +36,4 @@ class Menu{
         int menu_generico(SDL_Renderer** renderer, std::vector<std::string> nomes_para_rotulo, 
             std::string caminho_fonte, int tamanho_fonte);
         void finalizar();
-        void menu_principal(SDL_Renderer** renderer, bool* rodar_jogo);
-        int menu_pausa(SDL_Renderer** renderer, bool* rodar_jogo);
 };
