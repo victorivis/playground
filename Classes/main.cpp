@@ -16,7 +16,7 @@ SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
 const int NUM_PLAYERS=2;
-const int NUM_SOMBRAS=2;
+const int NUM_SOMBRAS=0;
 
 int main(int argc, char* argv[]) {
 	//Variaveis de controle e configuracao

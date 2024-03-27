@@ -364,6 +364,10 @@ int main(int argc, char* argv[]) {
 	menu_principal:
 	myMenu.menu_principal(&renderer, &rodar);
 
+	salvar_configuracoes("generico.txt");
+	//escrever_configuracoes("file.txt");
+	//ler_configuracoes("jones.txt");
+
 	//Execucao do jogo
 	while(rodar){
 		while(SDL_PollEvent(&evento)){
