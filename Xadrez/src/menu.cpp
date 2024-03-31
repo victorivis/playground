@@ -1,5 +1,7 @@
 #include "menu.h"
 
+int ModoDeJogo = Computador;
+
 const char font_path[]="assets/TrueType/Sans.ttf";
 const int font_size=50;
 
@@ -360,9 +362,18 @@ int Menu::menu_generico(SDL_Renderer** renderer, std::vector<std::string> nomes_
 }
 
 void Menu::menu_principal(SDL_Renderer** renderer, bool* rodar_jogo){
-    switch(menu_generico(renderer, {"Jogo Classico", "Editor Tabuleiro (nao funciona ainda)", "Sair"}, font_path, font_size)){
+    switch(menu_generico(renderer, {"Jogador x Jogador", "Jogador x Maquina", "Sair"}, font_path, font_size)){
+        case 0:
+            ModoDeJogo=Player;
+            break;
+
+        case 1:
+            ModoDeJogo=Computador;
+            break;
+        
         case 2:
             *rodar_jogo=false;
+            break;
     }
 }
 

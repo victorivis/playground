@@ -62,12 +62,17 @@ int avaliacao_posicao(std::vector<std::vector<char>>& pecas_tabuleiro){
 
 Lance minmax(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno, bool max){
     std::vector<Lance> possibilidades = todos_possiveis_lances(pecas_tabuleiro, turno, &controle_lances);
+    if(possibilidades.size()==0){
+        return {-1, -1, -1, -1};
+    }
+    
     int resultado=0;
     int valor_resultado=0;
     int proximo_turno = turno==Black ? White : Black;
 
     int backup_proximo_turno = proximo_turno;
     int backup_turno = turno;
+
     for(int i=0; i<possibilidades.size(); i++){
         executar_lance(pecas_tabuleiro, possibilidades[i], &controle_lances);
         int result_iteracao = avaliacao_posicao(pecas_tabuleiro);
@@ -98,5 +103,11 @@ void executar_lance_ia(std::vector<FEN>& controle_lances, std::vector<std::vecto
     turno = turno==White ? Black : White;
 
     Lance lance_escolhido = minmax(controle_lances, pecas_tabuleiro, turno, eh_max);
-    executar_lance(pecas_tabuleiro, lance_escolhido, &controle_lances);
+    if(lance_escolhido.src_i!=-1){
+        executar_lance(pecas_tabuleiro, lance_escolhido, &controle_lances);
+    }
+    else{
+        ModoDeJogo=FimDeJogo;
+        printf("Fim de Jogo\n");
+    }
 }

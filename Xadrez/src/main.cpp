@@ -227,7 +227,7 @@ int main(int argc, char* argv[]) {
 
 	//Carrega a tela de inicio
 	menu_principal:
-	//myMenu.menu_principal(&renderer, &rodar);
+	myMenu.menu_principal(&renderer, &rodar);
 
 	//Execucao do jogo
 	while(rodar){
@@ -264,7 +264,10 @@ int main(int argc, char* argv[]) {
 						break;
 					
 					case 'o': sentido_brancas = !sentido_brancas; inverter = !inverter; break;
-					case 'z': reverter_lance(controle_lances, pecas_tabuleiro, turno); break;
+					case 'z': 
+						reverter_lance(controle_lances, pecas_tabuleiro, turno); 
+						if(ModoDeJogo==Computador) reverter_lance(controle_lances, pecas_tabuleiro, turno);
+						break;
 					case 'x': mostrar_FEN(controle_lances); break;
 					case ']': 
 						do{
@@ -288,8 +291,9 @@ int main(int argc, char* argv[]) {
 					int j = (pos_x-inicio_x)/tam_quadrado;
 					int i = (pos_y-inicio_y)/tam_quadrado;
 					if(inverter) i = pecas_tabuleiro.size()-1-i;
-					//operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
-					jogar_computador(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+					
+					if (ModoDeJogo==Player)operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+					else if(ModoDeJogo==Computador) jogar_computador(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
 				}
 			}
 		}

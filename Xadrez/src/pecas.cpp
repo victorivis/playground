@@ -721,7 +721,7 @@ void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<c
 		char ultima_peca = controle_lances[posicao].origem;
 		char penultima_peca = controle_lances[posicao-1].origem;
 
-		printf("Ultima peca: %d %d\n", ultima_peca, penultima_peca);
+		//printf("Ultima peca: %d %d\n", ultima_peca, penultima_peca);
 		if(branco(ultima_peca) == branco(penultima_peca)){
 			printf("Reverter Dois Lances\n");
 			reverter_lance(controle_lances, pecas_tabuleiro, pseudo_turno);

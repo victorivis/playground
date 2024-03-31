@@ -5,12 +5,18 @@
 #include <iostream>
 #include <cstdio>
 
+enum Modo{
+    Player, Computador, FimDeJogo
+};
+
 enum Operacao{
     Continuar, Sair
 };
 
 int rodar_menu_pausa(SDL_Renderer*& renderer, int width);
 int rodar_menu_principal(SDL_Renderer*& renderer, int width);
+
+extern int ModoDeJogo;
 
 class Menu{
     public:
