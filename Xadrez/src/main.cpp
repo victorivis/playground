@@ -5,6 +5,7 @@
 #include "pecas.h"
 #include "menu.h"
 #include "visual.h"
+#include "ia.h"
 #include "main.h"
 
 const int WIDTH = 1080, HEIGHT = 640;
@@ -72,6 +73,71 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 	}
 }
 
+void jogar_computador(int i, int j, std::vector<Lance>& lances_clicado, 
+	std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
+	static int clique = Selecionar;
+	int peca = pecas_tabuleiro[i][j];
+
+	bool cor_valida=true;
+
+	if(turno == White){
+		cor_valida = branco(peca);
+	}
+	else if(turno == Black){
+		cor_valida = preto(peca);
+	}
+
+	printf("i: %d j: %d\n", i, j);
+	//playSound(sound);
+	
+	if(clique == Selecionar){
+		printf("Selecionar\n");
+		limpar_lances(lances_clicado);
+		if(cor_valida && peca!=Vazio && peca!=Agua){
+			lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro, &controle_lances);
+			imprimir_lances(lances_clicado);
+			clique = Executar;
+		}
+	}
+	else if(clique == Executar){
+		printf("Executar\n");
+		printf("total lances_clicado: %d\n", (int) lances_clicado.size());
+		bool executado=false;
+		for(int contador=0; contador<lances_clicado.size(); contador++){
+			if(lances_clicado[contador].dst_i == i && lances_clicado[contador].dst_j == j){
+				printf("Execuntando lance\n");
+				executado = true;
+
+				//int org_i = lances_clicado[contador].src_i;
+				//int org_j = lances_clicado[contador].src_j;
+				//controle_lances.push_back({lances_clicado[contador], pecas_tabuleiro[i][j], pecas_tabuleiro[org_i][org_j]});
+				
+				executar_lance(pecas_tabuleiro, lances_clicado[contador], &controle_lances);
+				if(turno==White) turno=Black;
+				else if(turno==Black) turno=White;
+
+				if(EstaEmCheque(pecas_tabuleiro, turno)){
+					printf("Cheque\n");
+				}
+				break;
+			}
+		}
+
+		limpar_lances(lances_clicado);
+		clique = Selecionar;
+
+		//Seleciona peca clicada se nao tiver executado um lance no ultimo clique
+		if(executado==false){
+			operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+		}
+		else{
+			int pseudo_turno = turno==White ? Black : White;
+			executar_lance_ia(controle_lances, pecas_tabuleiro, pseudo_turno);
+			turno = turno==White ? Black : White;
+		}
+	}
+}
+
 int main(int argc, char* argv[]) {
 	
 	//Criar Janela
@@ -81,18 +147,11 @@ int main(int argc, char* argv[]) {
 							  WIDTH, HEIGHT, 0);
 	renderer = SDL_CreateRenderer(window, -1, 0);
 
-	//iniciar biblioteca som.h
-	//
-	//initMixer();
-	//int sound = loadSound("assets/move-self.mp3");
-	//int som_captura = loadSound("assets/capture.mp3");
-	//setVolume(30);
-
 	//Variaveis de configuracao
 	Menu myMenu = Menu(WIDTH, HEIGHT);
 	int inicio_x=30;
-	int inicio_y=20;
-	int casas_por_linha = 10;
+	int inicio_y=50;
+	int casas_por_linha = 8;
 	int tam_quadrado = 60;
 
 	int final_x = inicio_x + (casas_por_linha)*tam_quadrado;
@@ -100,7 +159,6 @@ int main(int argc, char* argv[]) {
 
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
 	
-	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook},
 		{BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn, BlackStaticPawn},
@@ -111,8 +169,8 @@ int main(int argc, char* argv[]) {
 		{WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn},
 		{WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook},
 	};
-	*/
 
+	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 		{Agua, BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook, Agua},
@@ -125,6 +183,7 @@ int main(int argc, char* argv[]) {
 		{Agua, WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook, Agua},
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 	};
+	*/
 
 	/*
 	std::vector<std::vector<char>> pecas_tabuleiro = {
@@ -211,6 +270,8 @@ int main(int argc, char* argv[]) {
 						do{
 							SDL_PollEvent(&evento);
 						} while(evento.type != SDL_KEYDOWN);
+					case 'v':
+						printf("Valor posicao: %d\n", avaliacao_posicao(pecas_tabuleiro));
 				}
 			}
 
@@ -227,7 +288,8 @@ int main(int argc, char* argv[]) {
 					int j = (pos_x-inicio_x)/tam_quadrado;
 					int i = (pos_y-inicio_y)/tam_quadrado;
 					if(inverter) i = pecas_tabuleiro.size()-1-i;
-					operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+					//operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+					jogar_computador(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
 				}
 			}
 		}

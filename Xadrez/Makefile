@@ -17,8 +17,11 @@ menu.o: src\menu.cpp
 visual.o: src\visual.cpp
 	g++ src\visual.cpp $(WFLAGS) -c -o visual.o
 
-wincpp: pecas.o menu.o visual.o main.o
-	g++ .\main.o .\pecas.o .\menu.o .\visual.o $(WFLAGS) -o main.exe
+ia.o: src\ia.cpp
+	g++ src\ia.cpp $(WFLAGS) -c -o ia.o
+
+wincpp: pecas.o menu.o visual.o ia.o main.o
+	g++ .\main.o .\pecas.o .\menu.o .\visual.o .\ia.o $(WFLAGS) -o main.exe
 	del *.o
 
 winrun: wincpp
