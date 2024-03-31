@@ -4,207 +4,13 @@
 #include <cstdio>
 #include "pecas.h"
 #include "menu.h"
+#include "visual.h"
 #include "main.h"
 
 const int WIDTH = 1080, HEIGHT = 640;
 
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
-
-void highlight_proximo_lance(SDL_Rect posicao, bool capturar){
-	if(capturar){
-		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 180);
-	}
-	else{
-		SDL_SetRenderDrawColor(renderer, 180, 180, 180, 180);
-	}
-
-	posicao.x += posicao.w/4;
-	posicao.y += posicao.h/4;
-	posicao.w/=2;
-	posicao.h/=2;
-
-	SDL_RenderFillRect(renderer, &posicao);
-}
-
-void highlight_possiveis_lances(std::vector<Lance>& lances, std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro, bool inverter){
-	for(int i=0; i<lances.size(); i++){
-		if(!inverter){
-			char peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
-			highlight_proximo_lance(quadrado_tabuleiro[lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
-		}
-		else{
-			char peca = pecas_tabuleiro[lances[i].dst_i][lances[i].dst_j];
-			highlight_proximo_lance(quadrado_tabuleiro[pecas_tabuleiro.size()-1-lances[i].dst_i][lances[i].dst_j], peca!=Vazio && peca!=Agua);
-		}
-	}
-}
-
-std::vector<std::vector<SDL_Rect>> criar_tabuleiro(int casas_por_linha, int inicio_x, int inicio_y, int tam_quadrado){
-	
-	std::vector<std::vector<SDL_Rect>> tabuleiro(casas_por_linha);
-	for(int j=0; j<casas_por_linha; j++){
-		for(int i=0; i<casas_por_linha; i++){
-			tabuleiro[j].push_back({i*tam_quadrado+inicio_x, j*tam_quadrado+inicio_y, tam_quadrado, tam_quadrado});
-		}
-	}
-
-	return tabuleiro;
-}
-
-void desenhar_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro, bool padrao){
-	for(int i=0; i<tabuleiro.size(); i++){
-		for(int j=0; j<tabuleiro[i].size(); j++){
-			padrao ? SDL_SetRenderDrawColor(renderer, 0, 180, 0, 255) : SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-			SDL_RenderFillRect(renderer, &(tabuleiro[i][j]));
-			padrao = !padrao;
-		}
-		if(tabuleiro[i].size()%2==0) padrao = !padrao;
-	}
-}
-
-void mostrar_posicoes_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro){
-	for(int i=0; i<tabuleiro.size(); i++){
-		for(int j=0; j<tabuleiro[i].size(); j++){
-			printf("x%d: %d y%d: %d  ", i, tabuleiro[i][j].x, j, tabuleiro[i][j].y);
-		}
-		printf("\n");
-	}
-}
-
-void mostrar_pecas_tabuleiro(std::vector<std::vector<char>>& pecas_tabuleiro){
-	for(int i=0; i<pecas_tabuleiro.size(); i++){
-		printf("{");
-		for(int j=0; j<pecas_tabuleiro[i].size(); j++){
-			printf("%d", pecas_tabuleiro[i][j]);
-			if(j!=(int) pecas_tabuleiro[i].size()-1) printf(", ");
-		}
-		printf("},\n");
-	}
-}
-
-SDL_Texture* desenhar_peca(char peca){
-    std::string caminho = "assets/pecasBMP/";
-    std::string extensao = ".bmp";
-    std::string nome_peca;
-
-    switch(peca){
-		case Vazio:           nome_peca = "Vazio";           break;
-        case Agua:            nome_peca = "Agua";            break;
-        case Borda:           nome_peca = "Borda";           break;
-
-		case BlackStaticPawn:
-		case BlackPawn:       nome_peca = "BlackPawn";       break;
-        case BlackKnight:     nome_peca = "BlackKnight";     break;
-        case BlackBishop:     nome_peca = "BlackBishop";     break;
-		case BlackStaticRook:
-        case BlackRook:       nome_peca = "BlackRook";       break;
-        case BlackQueen:      nome_peca = "BlackQueen";      break;
-		case BlackStaticKing:
-        case BlackKing:       nome_peca = "BlackKing";       break;
-
-		case WhiteStaticPawn:
-        case WhitePawn:       nome_peca = "WhitePawn";       break;
-        case WhiteKnight:     nome_peca = "WhiteKnight";     break;
-        case WhiteBishop:     nome_peca = "WhiteBishop";     break;
-		case WhiteStaticRook:
-        case WhiteRook:       nome_peca = "WhiteRook";       break;
-        case WhiteQueen:      nome_peca = "WhiteQueen";      break;
-		case WhiteStaticKing:
-        case WhiteKing:       nome_peca = "WhiteKing";       break;
-		default:
-			printf("Erro ao desenhar peca: %d\n", peca); exit(1);
-    }
-
-	if(nome_peca.compare("Vazio")!=0 && nome_peca.compare("Borda")!=0){
-		std::string caminho_completo = caminho + nome_peca + extensao;
-		SDL_Surface* peca_sur = SDL_LoadBMP(caminho_completo.c_str());
-		SDL_Texture* peca_tex = SDL_CreateTextureFromSurface(renderer, peca_sur);
-		//SDL_RenderCopy(renderer, peca_tex, NULL, &retangulo);
-
-		SDL_FreeSurface(peca_sur);
-		//SDL_DestroyTexture(peca_tex);
-		return peca_tex;
-	}
-	else{
-		return nullptr;
-	}
-}
-
-void iniciar_imagens(std::vector<SDL_Texture*>& imagens){
-	for(char i=Agua; i<=WhiteKing; i++){
-		imagens.push_back(desenhar_peca(i));
-	}
-}
-
-void carregar_imagens(std::vector<SDL_Texture*>& imagens, SDL_Rect& posicao, char peca){
-	if(peca>=0 && peca<imagens.size()){
-		SDL_RenderCopy(renderer, imagens[peca], NULL, &posicao);
-	}
-}
-
-void destruir_imagens(std::vector<SDL_Texture*>& imagens){
-	int total = (int) imagens.size()-1;
-	for(int i=total; i>=0; i--){
-		SDL_DestroyTexture(imagens[i]);
-		imagens.pop_back();
-	}
-}
-
-void swap(auto* a, auto* b){
-	auto temp = *a;
-	*a = *b;
-	*b = temp;	
-}
-
-void inverter_tabuleiro(std::vector<std::vector<char>>& tabuleiro, int eixo){
-	//1 = horizontal, 2 = vertical, 3 = metade horizontal, 4 = metade vertical
-
-	int dist_x=tabuleiro.size(), dist_y=tabuleiro.size();
-	if(eixo==1){
-		dist_x/=2;
-	}
-	else if(eixo==2){
-		dist_y/=2;
-	}
-	else{
-		dist_x/=2;
-		dist_y/=2;
-	}
-
-	for(int i=0; i<dist_x; i++){
-		for(int j=0; j<dist_y; j++){
-			if(eixo == 1 || eixo == 3) swap(&(tabuleiro[i][j]), &(tabuleiro[tabuleiro.size()-1-i][j]));
-			else swap(&(tabuleiro[i][j]), &(tabuleiro[i][tabuleiro.size()-1-j]));
-		}
-	}
-}
-
-void imprimir_tabuleiro(std::vector<std::vector<char>>& tabuleiro){
-	for(int i=0; i<tabuleiro.size()/2; i++){
-		for(int j=0; j<tabuleiro[i].size()/2; j++){
-			printf("%d ", tabuleiro[i][j]);
-		}
-		printf("\n");
-	}
-}
-
-void imprimir_lances(std::vector<Lance>& lances){
-	int total_lances = (int) lances.size();
-
-	for(int i=0; i<total_lances; i++){
-		printf("Origem: %d %d Destino: %d %d\n", lances[i].src_i, lances[i].src_j, lances[i].dst_i, lances[i].dst_j);
-	}
-	printf("Total de lances possiveis: %d\n\n", total_lances);
-}
-
-void limpar_lances(std::vector<Lance>& lances){
-	int total_lances = lances.size();
-
-	for(int i=0; i<total_lances; i++){
-		lances.pop_back();
-	}
-}
 
 void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado, 
 	std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
@@ -315,7 +121,7 @@ int main(int argc, char* argv[]) {
 		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
 		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
 		{Agua, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Agua},
-		{Agua, WhiteStaticPawn, Vazio, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, Agua},
+		{Agua, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, WhiteStaticPawn, Agua},
 		{Agua, WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook, Agua},
 		{Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua, Agua},
 	};
@@ -358,15 +164,11 @@ int main(int argc, char* argv[]) {
 	int turno = White;
 	bool sentido_brancas=true;
 	bool inverter=false;
-	iniciar_imagens(imagens);
+	iniciar_imagens(&renderer, imagens);
 
 	//Carrega a tela de inicio
 	menu_principal:
-	myMenu.menu_principal(&renderer, &rodar);
-
-	salvar_configuracoes("generico.txt");
-	//escrever_configuracoes("file.txt");
-	//ler_configuracoes("jones.txt");
+	//myMenu.menu_principal(&renderer, &rodar);
 
 	//Execucao do jogo
 	while(rodar){
@@ -401,8 +203,7 @@ int main(int argc, char* argv[]) {
 						limpar_lances(lances);
 						printf("\n");
 						break;
-
-					case 'p': mostrar_pecas_tabuleiro(pecas_tabuleiro);	break;
+					
 					case 'o': sentido_brancas = !sentido_brancas; inverter = !inverter; break;
 					case 'z': reverter_lance(controle_lances, pecas_tabuleiro, turno); break;
 					case 'x': mostrar_FEN(controle_lances); break;
@@ -434,25 +235,25 @@ int main(int argc, char* argv[]) {
 		SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
 		SDL_RenderClear(renderer);
 
-		desenhar_tabuleiro(tabuleiro, inverter);
+		desenhar_tabuleiro(&renderer, tabuleiro, inverter);
 
 		if(sentido_brancas){
 			for(int i=0; i<pecas_tabuleiro.size(); i++){
 				for(int j=0; j<pecas_tabuleiro[i].size(); j++){
-					carregar_imagens(imagens, tabuleiro[i][j], pecas_tabuleiro[i][j]);
+					carregar_imagens(&renderer, imagens, tabuleiro[i][j], pecas_tabuleiro[i][j]);
 				}
 			}
 		}
 		else{
 			for(int i=0; i<pecas_tabuleiro.size(); i++){
 				for(int j=0; j<pecas_tabuleiro[i].size(); j++){
-					carregar_imagens(imagens, tabuleiro[i][j], pecas_tabuleiro[(int) pecas_tabuleiro[i].size()-1-i][j]);
+					carregar_imagens(&renderer, imagens, tabuleiro[i][j], pecas_tabuleiro[(int) pecas_tabuleiro[i].size()-1-i][j]);
 				}
 			}
 		}
 
 		if(lances_clicado.size()!=0){
-			highlight_possiveis_lances(lances_clicado, pecas_tabuleiro, tabuleiro, inverter);
+			highlight_possiveis_lances(&renderer, lances_clicado, pecas_tabuleiro, tabuleiro, inverter);
 		}
 		
 		SDL_RenderPresent(renderer);

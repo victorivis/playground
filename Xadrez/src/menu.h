@@ -4,7 +4,6 @@
 #include <vector>
 #include <iostream>
 #include <cstdio>
-#include <fstream>
 
 enum Operacao{
     Continuar, Sair
@@ -39,7 +38,3 @@ class Menu{
         void menu_principal(SDL_Renderer** renderer, bool* rodar_jogo);
         int menu_pausa(SDL_Renderer** renderer, bool* rodar_jogo);
 };
-
-void salvar_configuracoes(std::string file);
-void escrever_configuracoes(std::string file);
-void ler_configuracoes(std::string file);

@@ -59,3 +59,9 @@ bool alcanca_destino(std::vector<std::vector<char>>& pecas_tabuleiro, std::pair<
 
 void reverter_lance(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno);
 void mostrar_FEN(std::vector<FEN>& controle_lances);
+void imprimir_tabuleiro(std::vector<std::vector<char>>& tabuleiro);
+void limpar_lances(std::vector<Lance>& lances);
+void imprimir_lances(std::vector<Lance>& lances);
+
+void swap(char* a, char* b);
+void inverter_tabuleiro(std::vector<std::vector<char>>& tabuleiro, int eixo);

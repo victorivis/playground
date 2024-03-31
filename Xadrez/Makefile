@@ -14,8 +14,11 @@ pecas.o: src\pecas.cpp
 menu.o: src\menu.cpp
 	g++ src\menu.cpp $(WFLAGS) -c -o menu.o
 
-wincpp: pecas.o menu.o main.o
-	g++ .\main.o .\pecas.o .\menu.o $(WFLAGS) -o main.exe
+visual.o: src\visual.cpp
+	g++ src\visual.cpp $(WFLAGS) -c -o visual.o
+
+wincpp: pecas.o menu.o visual.o main.o
+	g++ .\main.o .\pecas.o .\menu.o .\visual.o $(WFLAGS) -o main.exe
 	del *.o
 
 winrun: wincpp

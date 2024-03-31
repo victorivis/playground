@@ -752,3 +752,58 @@ void mostrar_FEN(std::vector<FEN>& controle_lances){
 	}
 	printf("\n");
 }
+
+void imprimir_tabuleiro(std::vector<std::vector<char>>& tabuleiro){
+	for(int i=0; i<tabuleiro.size()/2; i++){
+		for(int j=0; j<tabuleiro[i].size()/2; j++){
+			printf("%d ", tabuleiro[i][j]);
+		}
+		printf("\n");
+	}
+}
+
+void limpar_lances(std::vector<Lance>& lances){
+	int total_lances = lances.size();
+
+	for(int i=0; i<total_lances; i++){
+		lances.pop_back();
+	}
+}
+
+void imprimir_lances(std::vector<Lance>& lances){
+	int total_lances = (int) lances.size();
+
+	for(int i=0; i<total_lances; i++){
+		printf("Origem: %d %d Destino: %d %d\n", lances[i].src_i, lances[i].src_j, lances[i].dst_i, lances[i].dst_j);
+	}
+	printf("Total de lances possiveis: %d\n\n", total_lances);
+}
+
+void swap(char* a, char* b){
+	char temp = *a;
+	*a = *b;
+	*b = temp;	
+}
+
+void inverter_tabuleiro(std::vector<std::vector<char>>& tabuleiro, int eixo){
+	//1 = horizontal, 2 = vertical, 3 = metade horizontal, 4 = metade vertical
+
+	int dist_x=tabuleiro.size(), dist_y=tabuleiro.size();
+	if(eixo==1){
+		dist_x/=2;
+	}
+	else if(eixo==2){
+		dist_y/=2;
+	}
+	else{
+		dist_x/=2;
+		dist_y/=2;
+	}
+
+	for(int i=0; i<dist_x; i++){
+		for(int j=0; j<dist_y; j++){
+			if(eixo == 1 || eixo == 3) swap(&(tabuleiro[i][j]), &(tabuleiro[tabuleiro.size()-1-i][j]));
+			else swap(&(tabuleiro[i][j]), &(tabuleiro[i][tabuleiro.size()-1-j]));
+		}
+	}
+}
