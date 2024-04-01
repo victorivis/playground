@@ -68,16 +68,13 @@ Lance minmax(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& 
     
     int resultado=0;
     int valor_resultado=0;
-    int proximo_turno = turno==Black ? White : Black;
-
-    int backup_proximo_turno = proximo_turno;
     int backup_turno = turno;
 
     for(int i=0; i<possibilidades.size(); i++){
         executar_lance(pecas_tabuleiro, possibilidades[i], &controle_lances);
         int result_iteracao = avaliacao_posicao(pecas_tabuleiro);
 
-        if(!max){
+        if(turno==White){
             if(valor_resultado < result_iteracao){
                 valor_resultado = result_iteracao;
                 resultado = i;
@@ -90,12 +87,45 @@ Lance minmax(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& 
             }
         }
 
-        reverter_lance(controle_lances, pecas_tabuleiro, turno);
-        proximo_turno = backup_proximo_turno;
-        turno = backup_turno;
+        reverter_lance(controle_lances, pecas_tabuleiro, backup_turno);
     }
 
     return possibilidades[resultado];
+}
+
+void minmax_recusivo(Lance* escolhido, int* pontuacao, int profundidade, std::vector<FEN>& controle_lances, 
+    std::vector<std::vector<char>>& pecas_tabuleiro, int& turno, bool max){
+        if(profundidade>0){
+            std::vector<Lance> possibilidades = todos_possiveis_lances(pecas_tabuleiro, turno, &controle_lances);
+            if(possibilidades.size()!=0){
+                int backup_turno=turno;
+                int melhor_lance=0;
+
+                //calcula o primeiro elemento
+                executar_lance(pecas_tabuleiro, possibilidades[0], &controle_lances);
+                int melhor_pontuacao=avaliacao_posicao(pecas_tabuleiro);
+                reverter_lance(controle_lances, pecas_tabuleiro, backup_turno);
+
+                for(int i=1; i<possibilidades.size(); i++){
+                    executar_lance(pecas_tabuleiro, possibilidades[i], &controle_lances);
+                    int pontuacao_iteracao=avaliacao_posicao(pecas_tabuleiro);
+                    reverter_lance(controle_lances, pecas_tabuleiro, backup_turno);
+
+                    if(turno==White){
+                        if(melhor_pontuacao < pontuacao_iteracao){
+                            melhor_pontuacao = pontuacao_iteracao;
+                            melhor_lance = i;
+                        }
+                    }
+                    else{
+                        if(melhor_pontuacao > pontuacao_iteracao){
+                            melhor_pontuacao = pontuacao_iteracao;
+                            melhor_lance = i;
+                        }
+                    }
+                }
+            }
+        }
 }
 
 void executar_lance_ia(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno){
