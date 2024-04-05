@@ -73,7 +73,7 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 	}
 }
 
-void jogar_computador(int i, int j, std::vector<Lance>& lances_clicado, 
+int jogar_computador(int i, int j, std::vector<Lance>& lances_clicado, 
 	std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
 	static int clique = Selecionar;
 	int peca = pecas_tabuleiro[i][j];
@@ -132,10 +132,11 @@ void jogar_computador(int i, int j, std::vector<Lance>& lances_clicado,
 		}
 		else{
 			int pseudo_turno = turno==White ? Black : White;
-			executar_lance_ia(controle_lances, pecas_tabuleiro, pseudo_turno);
 			turno = turno==White ? Black : White;
+			return 1;
 		}
 	}
+	return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -158,6 +159,19 @@ int main(int argc, char* argv[]) {
 	int final_y = inicio_y + (casas_por_linha)*tam_quadrado;
 
 	std::vector<std::vector<SDL_Rect>> tabuleiro = criar_tabuleiro(casas_por_linha, inicio_x, inicio_y, tam_quadrado);
+	
+	/*
+	std::vector<std::vector<char>> pecas_tabuleiro = {
+		{BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio},
+		{WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook},
+	};
+	*/
 	
 	std::vector<std::vector<char>> pecas_tabuleiro = {
 		{BlackStaticRook, BlackKnight, BlackBishop, BlackQueen, BlackStaticKing, BlackBishop, BlackKnight, BlackStaticRook},
@@ -224,6 +238,7 @@ int main(int argc, char* argv[]) {
 	bool sentido_brancas=true;
 	bool inverter=false;
 	iniciar_imagens(&renderer, imagens);
+	int lance_da_ia=0;
 
 	//Carrega a tela de inicio
 	menu_principal:
@@ -274,7 +289,8 @@ int main(int argc, char* argv[]) {
 							SDL_PollEvent(&evento);
 						} while(evento.type != SDL_KEYDOWN);
 					case 'v':
-						printf("Valor posicao: %d\n", avaliacao_posicao(pecas_tabuleiro));
+						printf("Valor posicao: %d\n", avaliacao_posicao(pecas_tabuleiro)); break;
+					case 'r': printf("valor da posicao: %d\n", avaliacao_posicao(pecas_tabuleiro)); break;
 				}
 			}
 
@@ -293,7 +309,7 @@ int main(int argc, char* argv[]) {
 					if(inverter) i = pecas_tabuleiro.size()-1-i;
 					
 					if (ModoDeJogo==Player)operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
-					else if(ModoDeJogo==Computador) jogar_computador(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+					else if(ModoDeJogo==Computador) lance_da_ia = jogar_computador(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
 				}
 			}
 		}
@@ -323,6 +339,12 @@ int main(int argc, char* argv[]) {
 		}
 		
 		SDL_RenderPresent(renderer);
+		if(lance_da_ia==1){
+			int pseudo_turno= turno;//==White? Black : White;
+			executar_lance_ia(controle_lances, pecas_tabuleiro, pseudo_turno);
+			//turno = turno==White ? Black : White;
+			lance_da_ia = 0;
+		}
 
 		SDL_Delay(120);
 	}

@@ -3,10 +3,11 @@
 #include <vector>
 #include <iostream>
 #include <cstdio>
+#include <climits>
 #include "pecas.h"
 #include "menu.h"
 
-const int profundidade=1;
+const int profundidade=2;
 
 enum valor_pecas{
     peao=1, cavalo=3, bispo=3, torre=5, rainha=9, rei=900
