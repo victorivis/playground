@@ -10,7 +10,7 @@
 const int profundidade=2;
 
 enum valor_pecas{
-    peao=1, cavalo=3, bispo=3, torre=5, rainha=9, rei=900
+    peao=10, cavalo=30, bispo=30, torre=50, rainha=90, rei=9000
 };
 
 int retorna_valor(char peca);

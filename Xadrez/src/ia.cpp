@@ -53,7 +53,40 @@ int avaliacao_posicao(std::vector<std::vector<char>>& pecas_tabuleiro){
     int total=0;
     for(int i=0; i<pecas_tabuleiro.size(); i++){
         for(int j=0; j<pecas_tabuleiro[i].size(); j++){
-            total += retorna_valor(pecas_tabuleiro[i][j]);
+			char peca = pecas_tabuleiro[i][j];
+            total += retorna_valor(peca);
+			switch(peca){
+				case BlackKing:
+				case BlackStaticKing:
+				    break;
+
+				case WhiteStaticKing:
+				case WhiteKing:
+					break;
+
+				case Vazio:
+				case Agua:
+				case Borda:
+					break;
+
+				case BlackPawn:
+				case BlackStaticPawn:
+				    total-= std::min(i, j)*5-10;
+					break;	
+
+				case WhiteStaticPawn:
+				case WhitePawn:
+				    total+= std::min(i, j)*5-10;
+					break;					
+
+				default:
+					if(branco(peca)){
+						total+= std::min(i, j)*2-6;
+					}
+					else{
+						total-= std::min(i, j)*2-6;
+					}
+			}
         }
     }
 
