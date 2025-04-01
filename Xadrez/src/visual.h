@@ -4,7 +4,6 @@
 #include <iostream>
 #include <cstdio>
 #include "pecas.h"
-#include "menu.h"
 
 void highlight_proximo_lance(SDL_Renderer** renderer, SDL_Rect posicao, bool capturar);
 void highlight_possiveis_lances(SDL_Renderer** renderer, std::vector<Lance>& lances, std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<std::vector<SDL_Rect>>& quadrado_tabuleiro, bool inverter);

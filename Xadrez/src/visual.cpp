@@ -41,14 +41,14 @@ std::vector<std::vector<SDL_Rect>> criar_tabuleiro(int casas_por_linha, int inic
 	return tabuleiro;
 }
 
-void desenhar_tabuleiro(SDL_Renderer** renderer, std::vector<std::vector<SDL_Rect>>& tabuleiro, bool padrao){
+void desenhar_tabuleiro(SDL_Renderer** renderer, std::vector<std::vector<SDL_Rect>>& tabuleiro, bool topoEsquerdoBranco){
 	for(int i=0; i<tabuleiro.size(); i++){
 		for(int j=0; j<tabuleiro[i].size(); j++){
-			padrao ? SDL_SetRenderDrawColor(*renderer, 0, 180, 0, 255) : SDL_SetRenderDrawColor(*renderer, 255, 255, 255, 255);
+			topoEsquerdoBranco ? SDL_SetRenderDrawColor(*renderer, 0, 180, 0, 255) : SDL_SetRenderDrawColor(*renderer, 255, 255, 255, 255);
 			SDL_RenderFillRect(*renderer, &(tabuleiro[i][j]));
-			padrao = !padrao;
+			topoEsquerdoBranco = !topoEsquerdoBranco;
 		}
-		if(tabuleiro[i].size()%2==0) padrao = !padrao;
+		if(tabuleiro[i].size()%2==0) topoEsquerdoBranco = !topoEsquerdoBranco;
 	}
 }
 
@@ -62,7 +62,7 @@ void mostrar_posicoes_tabuleiro(std::vector<std::vector<SDL_Rect>>& tabuleiro){
 }
 
 SDL_Texture* desenhar_peca(SDL_Renderer** renderer, char peca){
-    std::string caminho = "assets/pecasBMP/";
+    std::string caminho = "./assets/pecasBMP/";
     std::string extensao = ".bmp";
     std::string nome_peca;
 

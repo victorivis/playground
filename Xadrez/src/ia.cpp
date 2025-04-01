@@ -1,5 +1,7 @@
 #include "ia.h"
 
+bool exibirMinimax=false;
+
 int retorna_valor(char peca){
     switch(peca){
         case BlackPawn:
@@ -185,9 +187,9 @@ int minimax(std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& c
 		    int score = minimax(pecas_tabuleiro, controle_lances, height+1, !ehMax);
 		    reverter_lance(controle_lances, pecas_tabuleiro, backup_turno);
 		    bestScore = std::max(score, bestScore);
-			printf("White height: %d score: %d\n", height, score);
+			if(exibirMinimax) printf("White height: %d score: %d\n", height, score);
 		}
-		printf("White height: %d bestScore: %d\n\n", height, bestScore);		
+		if(exibirMinimax) printf("White height: %d bestScore: %d\n\n", height, bestScore);		
 
 		return bestScore;
 	}
@@ -205,9 +207,9 @@ int minimax(std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& c
 		    int score = minimax(pecas_tabuleiro, controle_lances, height+1, !ehMax);
 		    reverter_lance(controle_lances, pecas_tabuleiro, backup_turno);
 		    bestScore = std::min(score, bestScore);
-			printf("Black height: %d score: %d\n", height, score);
+			if(exibirMinimax) printf("Black height: %d score: %d\n", height, score);
 		}
-		printf("Black height: %d bestScore: %d\n\n", height, bestScore);
+		if(exibirMinimax) printf("Black height: %d bestScore: %d\n\n", height, bestScore);
 
 		return bestScore;
 	}
@@ -251,7 +253,7 @@ Lance bestMove(std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>
     }
 }
 
-void executar_lance_ia(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno){
+bool executar_lance_ia(std::vector<FEN>& controle_lances, std::vector<std::vector<char>>& pecas_tabuleiro, int& turno){
     bool eh_max = turno==White ? true : false;
     turno = turno==White ? Black : White;
 
@@ -259,9 +261,10 @@ void executar_lance_ia(std::vector<FEN>& controle_lances, std::vector<std::vecto
 	Lance lance_escolhido = bestMove(pecas_tabuleiro, controle_lances, turno);
     if(lance_escolhido.src_i!=-1){
         executar_lance(pecas_tabuleiro, lance_escolhido, &controle_lances);
+        return true;
     }
     else{
-        ModoDeJogo=FimDeJogo;
         printf("Fim de Jogo\n");
+        return false;
     }
 }
