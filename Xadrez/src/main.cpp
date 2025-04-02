@@ -51,6 +51,25 @@ int turno = White;
 int lance_da_ia=0;
 int ModoDeJogo=Computador;
 
+//Controla audio
+SDL_AudioSpec spec;
+Uint8 *audio_buffer;
+Uint32 audio_length;
+SDL_AudioStream *stream;
+
+void audio_callback(void *userdata, Uint8 *stream, int len) {
+    printf("audio\n");
+    if (audio_length == 0){
+        SDL_PauseAudio(1);
+        return;
+    }
+
+    len = (len > audio_length ? audio_length : len);
+    SDL_memcpy(stream, audio_buffer, len);
+    audio_buffer += len;
+    audio_length -= len;
+}
+
 //Acho que isso da para deixar local
 int inicio_x;
 int inicio_y;
@@ -258,7 +277,31 @@ void loopPrincipal(void* arg){
                         printf("Jogando contra Player\n");
                     }
                 break;
+
+                case 'p': 
+                    /*    
+                    temp = audio_buffer;
+                    if(SDL_LoadWAV("assets/sound.wav", &spec, &audio_buffer, &audio_length) != NULL){
+                        SDL_FreeWAV(temp);
+                        SDL_PauseAudio(0);
+                    }
+                    break;
+                    */
+                    
+                    if (audio_buffer != NULL) {
+                        SDL_FreeWAV(audio_buffer);  // Libera o buffer de áudio anterior
+                        audio_buffer = NULL;        // Evita o uso de um ponteiro inválido
+                        audio_length = 0;           // Reseta o comprimento do áudio
+                    }
                 
+                    // Carrega o novo áudio
+                    if (SDL_LoadWAV("assets/sound.wav", &spec, &audio_buffer, &audio_length) != NULL) {
+                        SDL_PauseAudio(0);  // Inicia a reprodução do áudio carregado
+                    } else {
+                        printf("Erro ao carregar o áudio: %s\n", SDL_GetError());
+                    }
+                    break;
+
                 case 'c': ModoDeJogo=Computador; lance_da_ia=1; break;
                 case 'v': ModoDeJogo=Computador; lance_da_ia=1; turno = turno==White? Black : White; break;
                 //case ']': 
@@ -349,6 +392,34 @@ int main(int argc, char* argv[]){
 
     printf("Seu turno\n");
 
+    if(SDL_LoadWAV("assets/sound.wav", &spec, &audio_buffer, &audio_length) == NULL){
+        printf("Deu ruim!");
+        return -1;
+    }
+
+    stream = SDL_NewAudioStream(AUDIO_S16, 1, 22050, AUDIO_F32, 2, 48000);
+    if (stream == NULL) {
+        printf("Erro ao criar stream: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    spec.callback = audio_callback;
+    spec.userdata = NULL;
+
+    // Abre o dispositivo de áudio com as especificações fornecidas
+    if (SDL_OpenAudio(&spec, NULL) < 0) {
+        printf("Erro ao abrir o dispositivo de áudio: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // Inicia a reprodução de áudio
+    SDL_PauseAudio(0);
+
+    while (audio_length > 0) {
+        SDL_Delay(10);
+    }
+    SDL_PauseAudio(0);
+
     #ifndef LOCAL        
         Context context;
         emscripten_set_main_loop_arg(loopPrincipal, &context, -1, 1);
@@ -360,6 +431,8 @@ int main(int argc, char* argv[]){
     #endif
 
     //Liberando memoria
+    SDL_FreeWAV(audio_buffer);
+    SDL_FreeAudioStream(stream);
     destruir_imagens(imagens);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
