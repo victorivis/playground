@@ -1,0 +1,3 @@
+# Ola!
+
+Esse repositório é uma coleção de programas que eu fiz para me divertir no meu tempo livre. Todas os códigos podem ser compilados C ou C++ para Windows, Linux e até para Web! Caso queira saber mais veja essa implementação do [Jogo da Cobrinha](https://victorivis.github.io/web-assembler/) e do [Xadrez](https://victorivis.github.io/xadrez/). Ambas as demonstrações estão disponíveis para o navegador graças ao emscripten que compila os códigos para web assembler.
