@@ -193,7 +193,7 @@ int minimax(std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& c
 
 		return bestScore;
 	}
-	printf("Futuro cheque-mate\n");
+	printf("Futuro xeque-mate\n");
 	return -100000;
     }
     else{
@@ -213,7 +213,7 @@ int minimax(std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& c
 
 		return bestScore;
 	}
-	printf("Futuro cheque-mate\n");
+	printf("Futuro xeque-mate\n");
 	return 100000;
     }
 }

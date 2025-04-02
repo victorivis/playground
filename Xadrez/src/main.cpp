@@ -104,7 +104,7 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 				else if(turno==Black) turno=White;
 
 				if(EstaEmCheque(pecas_tabuleiro, turno)){
-					printf("Cheque\n");
+					printf("Xeque\n");
 				}
 				break;
 			}
@@ -164,7 +164,7 @@ int jogar_computador(int i, int j, std::vector<Lance>& lances_clicado,
 				else if(turno==Black) turno=White;
 
 				if(EstaEmCheque(pecas_tabuleiro, turno)){
-					printf("Cheque\n");
+					printf("Xeque\n");
 				}
 				break;
 			}
@@ -207,9 +207,9 @@ void loopPrincipal(void* arg){
         }
         else if(evento.type == SDL_KEYDOWN){
             switch(evento.key.keysym.sym){
-                case SDLK_ESCAPE:
-                    //if(myMenu.menu_pausa(&renderer, &rodar)) goto menu_principal;
-                    break;
+                //case SDLK_ESCAPE:
+                //    //if(myMenu.menu_pausa(&renderer, &rodar)) goto menu_principal;
+                //    break;
                 //case 'q': playSound(sound);	break;
                 case 'w': inverter_tabuleiro(pecas_tabuleiro, 3); imprimir_tabuleiro(pecas_tabuleiro); break;
                 case 's': inverter_tabuleiro(pecas_tabuleiro, 4); imprimir_tabuleiro(pecas_tabuleiro); break;
@@ -221,17 +221,21 @@ void loopPrincipal(void* arg){
                     limpar_lances(lances);
                     printf("\n");
                     break;
-
+                
                 case 'k':
-                    if(ModoDeJogo==Computador){
-                        turno = turno==White? Black : White;
-                    }
                     lances = todos_possiveis_lances(pecas_tabuleiro, turno, &controle_lances);
                     if(lances.size()!=0){
                         executar_lance(pecas_tabuleiro, lances[rand()%lances.size()], &controle_lances);
                     }
-                    if(turno == White) turno = Black;
-                    else if(turno == Black) turno = White;
+
+                    if(ModoDeJogo==Player){
+                        if(turno == White) turno = Black;
+                        else if(turno == Black) turno = White;
+                    }
+                    else if(ModoDeJogo==Computador){
+                        lance_da_ia=1;
+                    }
+                    
                     imprimir_lances(lances);
                     limpar_lances(lances);
                     printf("\n");
@@ -254,7 +258,7 @@ void loopPrincipal(void* arg){
                         printf("Jogando contra Player\n");
                     }
                 break;
-
+                
                 case 'c': ModoDeJogo=Computador; lance_da_ia=1; break;
                 case 'v': ModoDeJogo=Computador; lance_da_ia=1; turno = turno==White? Black : White; break;
                 //case ']': 
@@ -262,9 +266,9 @@ void loopPrincipal(void* arg){
                 //        SDL_PollEvent(&evento);
                 //        SDL_Delay(delay);
                 //    } while(evento.type != SDL_KEYDOWN);
-                //case 'v':
-                //    printf("Valor posicao: %d\n", avaliacao_posicao(pecas_tabuleiro)); break;
-                //case 'r': printf("valor da posicao: %d\n", avaliacao_posicao(pecas_tabuleiro)); break;
+                case 'e':
+                    printf("Valor posicao: %d\n", avaliacao_posicao(pecas_tabuleiro)); break;
+                case 'r': printf("valor da posicao: %d\n", avaliacao_posicao(pecas_tabuleiro)); break;
             }
         }
         //Verificar se foi clicado no tabuleiro
@@ -311,7 +315,8 @@ void loopPrincipal(void* arg){
     
     SDL_RenderPresent(renderer);
 
-    SDL_Delay(delay);
+    if(lance_da_ia==0) SDL_Delay(delay);
+    else SDL_Delay(delay/4);
 }
 
 int main(int argc, char* argv[]){
@@ -319,6 +324,7 @@ int main(int argc, char* argv[]){
     SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer);
     iniciar_imagens(&renderer, imagens);
+    
 
     inicio_x=80;
 	inicio_y=10;
@@ -341,7 +347,9 @@ int main(int argc, char* argv[]){
 		{WhiteStaticRook, WhiteKnight, WhiteBishop, WhiteQueen, WhiteStaticKing, WhiteBishop, WhiteKnight, WhiteStaticRook},
 	};
 
-    #ifndef LOCAL
+    printf("Seu turno\n");
+
+    #ifndef LOCAL        
         Context context;
         emscripten_set_main_loop_arg(loopPrincipal, &context, -1, 1);
     #else
