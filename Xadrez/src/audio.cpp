@@ -36,7 +36,7 @@ void inicializarAudio(){
     if (SDL_OpenAudio(&spec, NULL) < 0) {
         printf("Erro ao abrir o dispositivo de áudio: %s\n", SDL_GetError());
     }
-    SDL_PauseAudio(0);
+    SDL_PauseAudio(1);
 }
 
 void reproduzirAudio(const char* caminhoArquivo){

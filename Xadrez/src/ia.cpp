@@ -261,6 +261,7 @@ bool executar_lance_ia(std::vector<FEN>& controle_lances, std::vector<std::vecto
 	Lance lance_escolhido = bestMove(pecas_tabuleiro, controle_lances, turno);
     if(lance_escolhido.src_i!=-1){
         executar_lance(pecas_tabuleiro, lance_escolhido, &controle_lances);
+        marcarUltimoLance = lance_escolhido;
         return true;
     }
     else{

@@ -46,6 +46,10 @@ std::vector<Lance> lances_clicado;
 std::vector<FEN> controle_lances;
 std::vector<SDL_Texture*> imagens;
 
+std::pair<SDL_Rect, SDL_Rect> ultimo_lance;
+SDL_Rect lanceAtual;
+SDL_Rect rectVazio;
+
 bool inverter=false;
 bool sentido_brancas=true;
 int turno = White;
@@ -61,7 +65,7 @@ int tam_quadrado;
 int final_x;
 int final_y;
 
-void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado, 
+int operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado, 
 	std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
 	static int clique = Selecionar;
 	int peca = pecas_tabuleiro[i][j];
@@ -75,17 +79,20 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 		cor_valida = preto(peca);
 	}
 
-	printf("i: %d j: %d\n", i, j);
-	//playSound(sound);
+	printf("i: %d j: %d\n", i, j);  
 	
 	if(clique == Selecionar){
 		printf("Selecionar\n");
 		limpar_lances(lances_clicado);
 		if(cor_valida && peca!=Vazio && peca!=Agua){
+            lanceAtual = tabuleiro[i][j];
 			lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro, &controle_lances);
 			imprimir_lances(lances_clicado);
 			clique = Executar;
 		}
+        else{
+            lanceAtual = rectVazio;
+        }        
 	}
 	else if(clique == Executar){
 		printf("Executar\n");
@@ -99,8 +106,9 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 				//int org_i = lances_clicado[contador].src_i;
 				//int org_j = lances_clicado[contador].src_j;
 				//controle_lances.push_back({lances_clicado[contador], pecas_tabuleiro[i][j], pecas_tabuleiro[org_i][org_j]});
-				
+
 				executar_lance(pecas_tabuleiro, lances_clicado[contador], &controle_lances);
+                ultimo_lance.second = tabuleiro[i][j];
 				if(turno==White) turno=Black;
 				else if(turno==Black) turno=White;
 
@@ -118,73 +126,40 @@ void operacoes_clicar(int i, int j, std::vector<Lance>& lances_clicado,
 		if(executado==false){
 			operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
 		}
+        else{
+            ultimo_lance.first = lanceAtual;
+            ultimo_lance.second = tabuleiro[i][j];
+            lanceAtual = rectVazio;
+
+            if(ModoDeJogo==Computador){
+                int pseudo_turno = turno==White ? Black : White;
+                turno = turno==White ? Black : White;
+                return 1;
+            }
+		}
 	}
+    return 0;
 }
 
-int jogar_computador(int i, int j, std::vector<Lance>& lances_clicado, 
-	std::vector<std::vector<char>>& pecas_tabuleiro, std::vector<FEN>& controle_lances, int& turno){
-	static int clique = Selecionar;
-	int peca = pecas_tabuleiro[i][j];
+void voltarLance(){
+    if(ModoDeJogo==FimDeJogo) ModoDeJogo=Player;
+    reverter_lance(controle_lances, pecas_tabuleiro, turno); 
+    if(ModoDeJogo==Computador) reverter_lance(controle_lances, pecas_tabuleiro, turno);
 
-	bool cor_valida=true;
+    int tam = controle_lances.size();
+    if(tam==0){
+        ultimo_lance.first = ultimo_lance.second = rectVazio;
+    }
+    else{
+        Lance* l = &controle_lances[tam-1].move;
+        ultimo_lance.second = tabuleiro[l->dst_i][l->dst_j];
 
-	if(turno == White){
-		cor_valida = branco(peca);
-	}
-	else if(turno == Black){
-		cor_valida = preto(peca);
-	}
-
-	printf("i: %d j: %d\n", i, j);
-	//playSound(sound);
-	
-	if(clique == Selecionar){
-		printf("Selecionar\n");
-		limpar_lances(lances_clicado);
-		if(cor_valida && peca!=Vazio && peca!=Agua){
-			lances_clicado = possiveis_lances_peca({i, j}, pecas_tabuleiro, &controle_lances);
-			imprimir_lances(lances_clicado);
-			clique = Executar;
-		}
-	}
-	else if(clique == Executar){
-		printf("Executar\n");
-		printf("total lances_clicado: %d\n", (int) lances_clicado.size());
-		bool executado=false;
-		for(int contador=0; contador<lances_clicado.size(); contador++){
-			if(lances_clicado[contador].dst_i == i && lances_clicado[contador].dst_j == j){
-				printf("Execuntando lance\n");
-				executado = true;
-
-				//int org_i = lances_clicado[contador].src_i;
-				//int org_j = lances_clicado[contador].src_j;
-				//controle_lances.push_back({lances_clicado[contador], pecas_tabuleiro[i][j], pecas_tabuleiro[org_i][org_j]});
-				
-				executar_lance(pecas_tabuleiro, lances_clicado[contador], &controle_lances);
-				if(turno==White) turno=Black;
-				else if(turno==Black) turno=White;
-
-				if(EstaEmCheque(pecas_tabuleiro, turno)){
-					printf("Xeque\n");
-				}
-				break;
-			}
-		}
-
-		limpar_lances(lances_clicado);
-		clique = Selecionar;
-
-		//Seleciona peca clicada se nao tiver executado um lance no ultimo clique
-		if(executado==false){
-			operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
-		}
-		else{
-			int pseudo_turno = turno==White ? Black : White;
-			turno = turno==White ? Black : White;
-			return 1;
-		}
-	}
-	return 0;
+        //No caso de dois lances da mesma cor, como no En Passant
+        if(tam-2>0 && branco(controle_lances[tam-1].peca) == branco(controle_lances[tam-2].peca)){
+            l = &controle_lances[tam-2].move;
+        }
+        ultimo_lance.first = tabuleiro[l->src_i][l->src_j];
+    }
 }
 
 void loopPrincipal(void* arg){
@@ -196,6 +171,9 @@ void loopPrincipal(void* arg){
             ModoDeJogo=FimDeJogo;
         }
         lance_da_ia = 0;
+
+        ultimo_lance.first = tabuleiro[marcarUltimoLance.src_i][marcarUltimoLance.src_j];
+        ultimo_lance.second = tabuleiro[marcarUltimoLance.dst_i][marcarUltimoLance.dst_j];
     }
 
     while(SDL_PollEvent(&evento)){
@@ -208,10 +186,10 @@ void loopPrincipal(void* arg){
         }
         else if(evento.type == SDL_KEYDOWN){
             switch(evento.key.keysym.sym){
-                //case SDLK_ESCAPE:
-                //    //if(myMenu.menu_pausa(&renderer, &rodar)) goto menu_principal;
-                //    break;
-                //case 'q': playSound(sound);	break;
+                case SDLK_ESCAPE:
+                    rodar=false;
+                    break;
+                case 'q': reproduzirAudio("assets/sound.wav"); break;
                 case 'w': inverter_tabuleiro(pecas_tabuleiro, 3); imprimir_tabuleiro(pecas_tabuleiro); break;
                 case 's': inverter_tabuleiro(pecas_tabuleiro, 4); imprimir_tabuleiro(pecas_tabuleiro); break;
                 case 'a': inverter_tabuleiro(pecas_tabuleiro, 1); imprimir_tabuleiro(pecas_tabuleiro); break;
@@ -244,9 +222,8 @@ void loopPrincipal(void* arg){
                 
                 case 'o': sentido_brancas = !sentido_brancas; inverter = !inverter; break;
                 case 'z':
-                    if(ModoDeJogo==FimDeJogo) ModoDeJogo=Player;
-                    reverter_lance(controle_lances, pecas_tabuleiro, turno); 
-                    if(ModoDeJogo==Computador) reverter_lance(controle_lances, pecas_tabuleiro, turno);
+                    voltarLance();
+
                     break;
                 case 'x': mostrar_FEN(controle_lances); break;
                 case 'i': 
@@ -259,9 +236,6 @@ void loopPrincipal(void* arg){
                         printf("Jogando contra Player\n");
                     }
                 break;
-
-                case 'p':
-                    reproduzirAudio("assets/sound.wav");
 
                 case 'c': ModoDeJogo=Computador; lance_da_ia=1; break;
                 case 'v': ModoDeJogo=Computador; lance_da_ia=1; turno = turno==White? Black : White; break;
@@ -284,8 +258,7 @@ void loopPrincipal(void* arg){
                 int i = (pos_y-inicio_y)/tam_quadrado;
                 if(inverter) i = pecas_tabuleiro.size()-1-i;
                 
-                if (ModoDeJogo==Player) operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
-                else if(ModoDeJogo==Computador) lance_da_ia = jogar_computador(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
+                if (ModoDeJogo!=FimDeJogo) lance_da_ia = operacoes_clicar(i, j, lances_clicado, pecas_tabuleiro, controle_lances, turno);
             }
         }
     }    
@@ -293,6 +266,11 @@ void loopPrincipal(void* arg){
     SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
     SDL_RenderClear(renderer);
     desenhar_tabuleiro(&renderer, tabuleiro, false);
+
+    highlight_ultimo_lance(&renderer, ultimo_lance.first);
+    highlight_ultimo_lance(&renderer, ultimo_lance.second);
+    highlight_ultimo_lance(&renderer, lanceAtual, {255, 255, 0, 160});
+
     if(sentido_brancas){
         for(int i=0; i<pecas_tabuleiro.size(); i++){
             for(int j=0; j<pecas_tabuleiro[i].size(); j++){
@@ -322,8 +300,8 @@ int main(int argc, char* argv[]){
     //Inicializando Janela
     SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer);
-    iniciar_imagens(&renderer, imagens);
-    
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND); //Permite transparencia
+    iniciar_imagens(&renderer, imagens);   
 
     inicio_x=80;
 	inicio_y=10;
