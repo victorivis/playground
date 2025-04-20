@@ -1,15 +1,22 @@
-WFLAGS = -I ..\..\SDL2\x86_64-w64-mingw32\include\ -L ..\..\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2
+# Libs
+WINLIBS = -std=c++20 -Wno-narrowing -I ..\..\SDL2\x86_64-w64-mingw32\include\ -L ..\..\SDL2\x86_64-w64-mingw32\lib\ -lmingw32 -lSDL2main -lSDL2
+LINUXLIBS = $(shell pkg-config --cflags --libs sdl2)
+WEBLIBS = -s WASM=1 -s USE_SDL=2
 
-run: main
-	@./a.out
-	@rm a.out
+winc: $(FILES)
+	gcc snake.c $(WINLIBS) -o saida.exe
 
-main: main.c
-	gcc main.c $(shell pkg-config --cflags --libs sdl2)
+linuxc: $(FILES)
+	gcc snake.c $(LINUXLIBS) -o saida.out
 
-winc: main.c
-	gcc .\main.c $(WFLAGS) -o main.exe
+webc: $(FILES)
+	emcc snake.c $(WEBLIBS) -o index.js
 
 winrun: winc
-	@ ./main.exe
-	@ del main.exe
+	./saida.exe
+
+linuxrun: linuxc
+	./saida.out
+
+webrun: webc
+	emrun index.html
